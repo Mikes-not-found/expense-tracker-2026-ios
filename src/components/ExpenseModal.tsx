@@ -135,6 +135,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               placeholderTextColor="#a8bfa0"
               autoFocus={false}
               returnKeyType="next"
+              inputAccessoryViewID={Platform.OS === 'ios' ? INPUT_ACCESSORY_ID : undefined}
             />
 
             <View style={styles.row}>

@@ -1,7 +1,9 @@
 /**
  * SummaryModal — kawaii Kakeibo-style monthly summary editor.
+ * Keyboard dismiss: tapping outside inputs closes keyboard.
+ * iOS gets a Done button via InputAccessoryView.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Modal,
   View,
@@ -10,9 +12,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
+  InputAccessoryView,
 } from 'react-native';
 import { Button } from './ui/Button';
 import { makeStyles } from '../utils/styles';
+import { useTheme } from '../store/ThemeContext';
 
 interface SummaryModalProps {
   visible: boolean;
@@ -22,6 +28,8 @@ interface SummaryModalProps {
   onClose: () => void;
 }
 
+const SUMMARY_ACCESSORY_ID = 'summary-modal-done';
+
 export const SummaryModal: React.FC<SummaryModalProps> = ({
   visible,
   title,
@@ -30,53 +38,78 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   onClose,
 }) => {
   const styles = useStyles();
+  const { theme } = useTheme();
   const [text, setText] = useState('');
 
   useEffect(() => {
     if (visible) setText(initialText);
   }, [visible, initialText]);
 
+  const handleSave = useCallback(() => {
+    Keyboard.dismiss();
+    onSave(text);
+  }, [text, onSave]);
+
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    onClose();
+  }, [onClose]);
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>{'\u{1F33F}'} {title}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>{'\u2715'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.body}>
-          <Text style={styles.hint}>
-            {'\u{1F375}'} Write your Kakeibo reflection — what did you spend on? What are you grateful for? What are your savings goals?
-          </Text>
-          <TextInput
-            style={styles.textarea}
-            value={text}
-            onChangeText={setText}
-            multiline
-            textAlignVertical="top"
-            placeholder="This month I spent on... I'm grateful for... Next month I want to..."
-            placeholderTextColor="#a8bfa0"
-          />
-        </View>
-
-        <View style={styles.footer}>
-          <Text style={styles.charCount}>{'\u{1F4DD}'} {text.length} characters</Text>
-          <View style={styles.actions}>
-            <Button variant="ghost" onPress={onClose}>Cancel</Button>
-            <Button variant="primary" onPress={() => onSave(text)}>{'\u{1F4BE}'} Save</Button>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <KeyboardAvoidingView
+          style={styles.root}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.header}>
+            <Text style={styles.title}>{'\u{1F33F}'} {title}</Text>
+            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+              <Text style={styles.closeText}>{'\u2715'}</Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      </KeyboardAvoidingView>
+
+          <View style={styles.body}>
+            <Text style={styles.hint}>
+              {'\u{1F375}'} Write your Kakeibo reflection — what did you spend on? What are you grateful for? What are your savings goals?
+            </Text>
+            <TextInput
+              style={styles.textarea}
+              value={text}
+              onChangeText={setText}
+              multiline
+              textAlignVertical="top"
+              placeholder="This month I spent on... I'm grateful for... Next month I want to..."
+              placeholderTextColor="#a8bfa0"
+              inputAccessoryViewID={Platform.OS === 'ios' ? SUMMARY_ACCESSORY_ID : undefined}
+            />
+          </View>
+
+          <View style={styles.footer}>
+            <Text style={styles.charCount}>{'\u{1F4DD}'} {text.length} characters</Text>
+            <View style={styles.actions}>
+              <Button variant="ghost" onPress={handleClose}>Cancel</Button>
+              <Button variant="primary" onPress={handleSave}>{'\u{1F4BE}'} Save</Button>
+            </View>
+          </View>
+
+          {/* iOS Done button above keyboard */}
+          {Platform.OS === 'ios' && (
+            <InputAccessoryView nativeID={SUMMARY_ACCESSORY_ID}>
+              <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+                <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+                  <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </InputAccessoryView>
+          )}
+        </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -160,5 +193,21 @@ const useStyles = makeStyles((t) => ({
   actions: {
     flexDirection: 'row',
     gap: t.spacing.sm,
+  },
+  accessoryBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+  },
+  doneButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  doneText: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.md,
   },
 }));
