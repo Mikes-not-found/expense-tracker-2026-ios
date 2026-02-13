@@ -55,8 +55,9 @@ export const DashboardScreen: React.FC = () => {
         showToast('Excel imported successfully', 'success');
       }
     } catch (err) {
+      console.error('Import error:', err);
       haptics.error();
-      showToast('Error importing Excel', 'error');
+      showToast(`Import error: ${err instanceof Error ? err.message : String(err)}`, 'error');
     }
   }, [importData, haptics, showToast]);
 
@@ -66,8 +67,9 @@ export const DashboardScreen: React.FC = () => {
       haptics.success();
       showToast('Excel exported', 'success');
     } catch (err) {
+      console.error('Export error:', err);
       haptics.error();
-      showToast('Error exporting Excel', 'error');
+      showToast(`Export error: ${err instanceof Error ? err.message : String(err)}`, 'error');
     }
   }, [expenses, summaries, workbook, haptics, showToast]);
 

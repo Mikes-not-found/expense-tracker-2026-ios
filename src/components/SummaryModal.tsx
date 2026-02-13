@@ -1,19 +1,22 @@
 /**
  * SummaryModal — monthly summary editor.
- * TextInput multiline with character counter.
+ * Footer stays fixed — keyboard dismissed via Done button or tapping outside.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Modal,
   View,
   Text,
   TextInput,
-  KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  TouchableWithoutFeedback,
+  Keyboard,
+  InputAccessoryView,
 } from 'react-native';
 import { Button } from './ui/Button';
 import { makeStyles } from '../utils/styles';
+import { useTheme } from '../store/ThemeContext';
 
 interface SummaryModalProps {
   visible: boolean;
@@ -23,6 +26,8 @@ interface SummaryModalProps {
   onClose: () => void;
 }
 
+const SUMMARY_ACCESSORY_ID = 'summary-modal-done';
+
 export const SummaryModal: React.FC<SummaryModalProps> = ({
   visible,
   title,
@@ -31,53 +36,75 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   onClose,
 }) => {
   const styles = useStyles();
+  const { theme } = useTheme();
   const [text, setText] = useState('');
 
   useEffect(() => {
     if (visible) setText(initialText);
   }, [visible, initialText]);
 
+  const handleSave = useCallback(() => {
+    Keyboard.dismiss();
+    onSave(text);
+  }, [text, onSave]);
+
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    onClose();
+  }, [onClose]);
+
   return (
     <Modal
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>✕</Text>
-          </TouchableOpacity>
-        </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.root}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{title}</Text>
+            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.body}>
-          <Text style={styles.hint}>
-            Write your monthly summary, reflections, and goals. This will be saved and exported with your Excel data.
-          </Text>
-          <TextInput
-            style={styles.textarea}
-            value={text}
-            onChangeText={setText}
-            multiline
-            textAlignVertical="top"
-            placeholder="What happened this month? What did you spend on? Any reflections or goals for next month..."
-            placeholderTextColor="#556677"
-          />
-        </View>
+          <View style={styles.body}>
+            <Text style={styles.hint}>
+              Write your monthly summary, reflections, and goals. This will be saved and exported with your Excel data.
+            </Text>
+            <TextInput
+              style={styles.textarea}
+              value={text}
+              onChangeText={setText}
+              multiline
+              textAlignVertical="top"
+              placeholder="What happened this month? What did you spend on? Any reflections or goals for next month..."
+              placeholderTextColor="#556677"
+              inputAccessoryViewID={Platform.OS === 'ios' ? SUMMARY_ACCESSORY_ID : undefined}
+            />
+          </View>
 
-        <View style={styles.footer}>
-          <Text style={styles.charCount}>{text.length} characters</Text>
-          <View style={styles.actions}>
-            <Button variant="ghost" onPress={onClose}>Cancel</Button>
-            <Button variant="primary" onPress={() => onSave(text)}>Save Summary</Button>
+          <View style={styles.footer}>
+            <Text style={styles.charCount}>{text.length} characters</Text>
+            <View style={styles.actions}>
+              <Button variant="ghost" onPress={handleClose}>Cancel</Button>
+              <Button variant="primary" onPress={handleSave}>Save Summary</Button>
+            </View>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+
+      {/* iOS Done button above keyboard — MUST be outside TouchableWithoutFeedback */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={SUMMARY_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </Modal>
   );
 };
@@ -157,5 +184,21 @@ const useStyles = makeStyles((t) => ({
   actions: {
     flexDirection: 'row',
     gap: t.spacing.sm,
+  },
+  accessoryBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+  },
+  doneButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  doneText: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.md,
   },
 }));

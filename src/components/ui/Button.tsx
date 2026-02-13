@@ -73,13 +73,9 @@ export const Button: React.FC<ButtonProps> = ({
       ]}
     >
       {icon}
-      {typeof children === 'string' ? (
-        <Text style={[styles.text, { color: v.text }, small && styles.textSmall]}>
-          {children}
-        </Text>
-      ) : (
-        children
-      )}
+      <Text style={[styles.text, { color: v.text }, small && styles.textSmall]}>
+        {children}
+      </Text>
     </TouchableOpacity>
   );
 };

@@ -10,11 +10,14 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
   Platform,
+  InputAccessoryView,
 } from 'react-native';
 import { Button } from './ui/Button';
 import { makeStyles } from '../utils/styles';
+import { useTheme } from '../store/ThemeContext';
 import { categorySubcategories, categoryNames } from '../constants/categories';
 import type { Expense } from '../types';
 
@@ -26,6 +29,8 @@ interface ExpenseModalProps {
 }
 
 const emptyForm = { name: '', date: '', amount: '', primary: '', secondary: '' };
+const DAY_ACCESSORY_ID = 'expense-day-done';
+const AMOUNT_ACCESSORY_ID = 'expense-amount-done';
 
 export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   visible,
@@ -34,6 +39,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   onClose,
 }) => {
   const styles = useStyles();
+  const { theme } = useTheme();
   const [form, setForm] = useState(emptyForm);
   const [showPrimaryPicker, setShowPrimaryPicker] = useState(false);
   const [showSecondaryPicker, setShowSecondaryPicker] = useState(false);
@@ -70,6 +76,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
   const handleSave = useCallback(() => {
     if (!isValid) return;
+    Keyboard.dismiss();
     onSave({
       name: form.name.trim(),
       date: parseInt(form.date, 10),
@@ -78,6 +85,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       secondary: form.secondary,
     });
   }, [form, isValid, onSave]);
+
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    onClose();
+  }, [onClose]);
 
   const selectPrimary = (cat: string) => {
     setForm((f) => ({ ...f, primary: cat, secondary: '' }));
@@ -94,67 +106,75 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>{expense ? 'Edit Expense' : 'New Expense'}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>✕</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
-          {/* Name */}
-          <Text style={styles.label}>EXPENSE NAME</Text>
-          <TextInput
-            style={styles.input}
-            value={form.name}
-            onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-            placeholder="e.g. Grocery shopping"
-            placeholderTextColor="#556677"
-            autoFocus={!expense}
-          />
-
-          {/* Date + Amount row */}
-          <View style={styles.row}>
-            <View style={styles.halfField}>
-              <Text style={styles.label}>DAY</Text>
-              <TextInput
-                style={styles.input}
-                value={form.date}
-                onChangeText={(v) => setForm((f) => ({ ...f, date: v }))}
-                placeholder="1-31"
-                placeholderTextColor="#556677"
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-            <View style={styles.halfField}>
-              <Text style={styles.label}>AMOUNT (€)</Text>
-              <TextInput
-                style={styles.input}
-                value={form.amount}
-                onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
-                placeholder="0.00"
-                placeholderTextColor="#556677"
-                keyboardType="decimal-pad"
-              />
-            </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.root}>
+          <View style={styles.header}>
+            <Text style={styles.title}>{expense ? 'Edit Expense' : 'New Expense'}</Text>
+            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+              <Text style={styles.closeText}>✕</Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Category */}
-          <Text style={styles.label}>CATEGORY</Text>
-          <TouchableOpacity
-            style={styles.picker}
-            onPress={() => {
-              setShowPrimaryPicker((v) => !v);
-              setShowSecondaryPicker(false);
-            }}
+          <ScrollView
+            style={styles.body}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
           >
+            {/* Name */}
+            <Text style={styles.label}>EXPENSE NAME</Text>
+            <TextInput
+              style={styles.input}
+              value={form.name}
+              onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
+              placeholder="e.g. Grocery shopping"
+              placeholderTextColor="#556677"
+              autoFocus={false}
+              returnKeyType="done"
+              onSubmitEditing={Keyboard.dismiss}
+            />
+
+            {/* Date + Amount row */}
+            <View style={styles.row}>
+              <View style={styles.halfField}>
+                <Text style={styles.label}>DAY</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.date}
+                  onChangeText={(v) => setForm((f) => ({ ...f, date: v }))}
+                  placeholder="1-31"
+                  placeholderTextColor="#556677"
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  inputAccessoryViewID={Platform.OS === 'ios' ? DAY_ACCESSORY_ID : undefined}
+                />
+              </View>
+              <View style={styles.halfField}>
+                <Text style={styles.label}>AMOUNT (€)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.amount}
+                  onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
+                  placeholder="0.00"
+                  placeholderTextColor="#556677"
+                  keyboardType="decimal-pad"
+                  inputAccessoryViewID={Platform.OS === 'ios' ? AMOUNT_ACCESSORY_ID : undefined}
+                />
+              </View>
+            </View>
+
+            {/* Category */}
+            <Text style={styles.label}>CATEGORY</Text>
+            <TouchableOpacity
+              style={styles.picker}
+              onPress={() => {
+                Keyboard.dismiss();
+                setShowPrimaryPicker((v) => !v);
+                setShowSecondaryPicker(false);
+              }}
+            >
             <Text style={form.primary ? styles.pickerText : styles.pickerPlaceholder}>
               {form.primary || 'Select...'}
             </Text>
@@ -187,6 +207,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             style={[styles.picker, !form.primary && styles.pickerDisabled]}
             onPress={() => {
               if (form.primary) {
+                Keyboard.dismiss();
                 setShowSecondaryPicker((v) => !v);
                 setShowPrimaryPicker(false);
               }
@@ -220,20 +241,41 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           )}
 
           <View style={{ height: 40 }} />
-        </ScrollView>
+          </ScrollView>
 
-        {/* Actions */}
-        <View style={styles.actions}>
-          <Button variant="ghost" onPress={onClose}>Cancel</Button>
-          <Button
-            variant="primary"
-            onPress={handleSave}
-            disabled={!isValid}
-          >
-            Save Expense
-          </Button>
+          {/* Actions */}
+          <View style={styles.actions}>
+            <Button variant="ghost" onPress={handleClose}>Cancel</Button>
+            <Button
+              variant="primary"
+              onPress={handleSave}
+              disabled={!isValid}
+            >
+              Save Expense
+            </Button>
+          </View>
         </View>
-      </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
+
+      {/* iOS Done buttons — separate nativeID per keyboard type */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={DAY_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={AMOUNT_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </Modal>
   );
 };
@@ -364,5 +406,21 @@ const useStyles = makeStyles((t) => ({
     borderTopWidth: 1,
     borderTopColor: t.colors.border,
     paddingBottom: t.spacing.xl,
+  },
+  accessoryBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+  },
+  doneButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  doneText: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.md,
   },
 }));
