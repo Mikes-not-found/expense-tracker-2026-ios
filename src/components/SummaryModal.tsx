@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Button } from './ui/Button';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 
 interface SummaryModalProps {
   visible: boolean;
@@ -30,6 +30,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const styles = useStyles();
   const [text, setText] = useState('');
 
   useEffect(() => {
@@ -81,7 +82,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
     backgroundColor: t.colors.bgSurface,

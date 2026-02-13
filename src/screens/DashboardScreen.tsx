@@ -3,7 +3,7 @@
  * Mirrors the PWA's renderDashboard() function.
  */
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, Text, Alert } from 'react-native';
+import { View, ScrollView, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StatCard } from '../components/StatCard';
@@ -16,6 +16,7 @@ import { ToastContainer } from '../components/Toast';
 import { useDashboard, useDataActions } from '../store/hooks';
 import { useToast } from '../hooks/useToast';
 import { useHaptics } from '../hooks/useHaptics';
+import { useTheme } from '../store/ThemeContext';
 
 import { months, monthShortNames, type MonthKey } from '../constants/categories';
 import {
@@ -24,14 +25,15 @@ import {
   calculateFilteredTotal,
 } from '../utils/calculations';
 import { importExcel, downloadExcel } from '../utils/excel';
-import { createStyles } from '../utils/styles';
-import { theme } from '../constants/theme';
+import { makeStyles } from '../utils/styles';
 
 export const DashboardScreen: React.FC = () => {
   const dashboard = useDashboard();
   const { expenses, summaries, workbook, importData } = useDataActions();
   const { toasts, showToast } = useToast();
   const haptics = useHaptics();
+  const { theme, isDark, toggleTheme } = useTheme();
+  const styles = useStyles();
 
   const [filterMonth, setFilterMonth] = useState<MonthKey | ''>('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -87,6 +89,17 @@ export const DashboardScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
+        {/* Header */}
+        <View style={styles.headerSection}>
+          <View>
+            <Text style={styles.appTitle}>Expense Tracker</Text>
+            <Text style={styles.appSubtitle}>2026 Overview</Text>
+          </View>
+          <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme} activeOpacity={0.7}>
+            <Text style={styles.themeToggleIcon}>{isDark ? '☀️' : '🌙'}</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Toolbar */}
         <View style={styles.toolbar}>
           <Button variant="success" onPress={handleImport} small>
@@ -198,7 +211,7 @@ export const DashboardScreen: React.FC = () => {
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
     backgroundColor: t.colors.bgBase,
@@ -209,6 +222,36 @@ const styles = createStyles((t) => ({
   content: {
     padding: t.spacing.md,
     gap: t.spacing.lg,
+  },
+  headerSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: t.spacing.sm,
+  },
+  appTitle: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize['2xl'],
+    color: t.colors.textPrimary,
+  },
+  appSubtitle: {
+    fontFamily: t.fonts.mono,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textMuted,
+    marginTop: 2,
+  },
+  themeToggle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: t.colors.bgInteractive,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: t.colors.border,
+  },
+  themeToggleIcon: {
+    fontSize: 20,
   },
   toolbar: {
     flexDirection: 'row',

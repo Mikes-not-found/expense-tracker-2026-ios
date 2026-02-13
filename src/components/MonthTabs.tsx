@@ -5,7 +5,7 @@
 import React, { useRef, useEffect } from 'react';
 import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
 import { months, monthShortNames, type MonthKey } from '../constants/categories';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 
 interface MonthTabsProps {
   activeMonth: MonthKey;
@@ -13,6 +13,7 @@ interface MonthTabsProps {
 }
 
 export const MonthTabs: React.FC<MonthTabsProps> = ({ activeMonth, onSelect }) => {
+  const styles = useStyles();
   const scrollRef = useRef<ScrollView>(null);
 
   // Scroll active tab into view
@@ -53,7 +54,7 @@ export const MonthTabs: React.FC<MonthTabsProps> = ({ activeMonth, onSelect }) =
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   container: {
     backgroundColor: t.colors.bgBase,
     borderBottomWidth: 1,

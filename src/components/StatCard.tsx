@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, type StyleProp, type ViewStyle } from 'react-native';
 import { Card } from './ui/Card';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 
 interface StatCardProps {
   label: string;
@@ -19,18 +19,22 @@ export const StatCard: React.FC<StatCardProps> = ({
   value,
   valueColor,
   style,
-}) => (
-  <Card style={[styles.card, style]}>
-    <View style={styles.inner}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={[styles.value, valueColor ? { color: valueColor } : undefined]}>
-        {value}
-      </Text>
-    </View>
-  </Card>
-);
+}) => {
+  const styles = useStyles();
 
-const styles = createStyles((t) => ({
+  return (
+    <Card style={[styles.card, style]}>
+      <View style={styles.inner}>
+        <Text style={styles.label}>{label}</Text>
+        <Text style={[styles.value, valueColor ? { color: valueColor } : undefined]}>
+          {value}
+        </Text>
+      </View>
+    </Card>
+  );
+};
+
+const useStyles = makeStyles((t) => ({
   card: {
     padding: 0,
   },

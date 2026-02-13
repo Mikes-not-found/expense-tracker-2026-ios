@@ -4,7 +4,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { months, monthShortNames, categoryNames, type MonthKey } from '../constants/categories';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 import { formatEuro } from '../utils/calculations';
 
 interface FilterBarProps {
@@ -29,7 +29,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   showCategoryOptions,
   onToggleMonthOptions,
   onToggleCategoryOptions,
-}) => (
+}) => {
+  const styles = useStyles();
+
+  return (
   <View>
     <View style={styles.row}>
       {/* Month picker */}
@@ -105,9 +108,10 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       </View>
     )}
   </View>
-);
+  );
+};
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   row: {
     flexDirection: 'row',
     gap: t.spacing.sm,

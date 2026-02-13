@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated } from 'react-native';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 import { formatEuro, calcPct } from '../utils/calculations';
 
 interface SpendingRowProps {
@@ -14,6 +14,7 @@ interface SpendingRowProps {
 }
 
 export const SpendingRow: React.FC<SpendingRowProps> = ({ name, amount, total }) => {
+  const styles = useStyles();
   const widthAnim = useRef(new Animated.Value(0)).current;
   const pct = calcPct(amount, total);
   const pctNum = parseFloat(pct);
@@ -48,7 +49,7 @@ export const SpendingRow: React.FC<SpendingRowProps> = ({ name, amount, total })
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

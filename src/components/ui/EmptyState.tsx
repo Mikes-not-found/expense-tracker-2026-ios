@@ -3,7 +3,7 @@
  */
 import React from 'react';
 import { View, Text } from 'react-native';
-import { createStyles } from '../../utils/styles';
+import { makeStyles } from '../../utils/styles';
 
 interface EmptyStateProps {
   icon?: string;
@@ -12,18 +12,21 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon = '</>' ,
+  icon = '</>',
   title,
   subtitle,
-}) => (
-  <View style={styles.container}>
-    <Text style={styles.icon}>{icon}</Text>
-    <Text style={styles.title}>{title}</Text>
-    {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
-  </View>
-);
+}) => {
+  const styles = useStyles();
+  return (
+    <View style={styles.container}>
+      <Text style={styles.icon}>{icon}</Text>
+      <Text style={styles.title}>{title}</Text>
+      {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
+    </View>
+  );
+};
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   container: {
     alignItems: 'center',
     justifyContent: 'center',

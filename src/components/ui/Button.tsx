@@ -3,14 +3,9 @@
  * Open/Closed Principle: add new variants without modifying existing code.
  */
 import React, { type ReactNode } from 'react';
-import {
-  TouchableOpacity,
-  Text,
-  type ViewStyle,
-  type TextStyle,
-} from 'react-native';
-import { createStyles } from '../../utils/styles';
-import { theme } from '../../constants/theme';
+import { TouchableOpacity, Text, type ViewStyle } from 'react-native';
+import { makeStyles } from '../../utils/styles';
+import { useTheme } from '../../store/ThemeContext';
 
 type ButtonVariant = 'primary' | 'success' | 'danger' | 'ghost';
 
@@ -24,29 +19,6 @@ interface ButtonProps {
   small?: boolean;
 }
 
-const variantStyles: Record<ButtonVariant, { bg: string; text: string; border: string }> = {
-  primary: {
-    bg: theme.colors.accent,
-    text: theme.colors.bgBase,
-    border: theme.colors.accent,
-  },
-  success: {
-    bg: theme.colors.green,
-    text: theme.colors.bgBase,
-    border: theme.colors.green,
-  },
-  danger: {
-    bg: theme.colors.redMuted,
-    text: theme.colors.red,
-    border: 'transparent',
-  },
-  ghost: {
-    bg: 'transparent',
-    text: theme.colors.textSecondary,
-    border: theme.colors.border,
-  },
-};
-
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   onPress,
@@ -56,6 +28,32 @@ export const Button: React.FC<ButtonProps> = ({
   style,
   small = false,
 }) => {
+  const { theme } = useTheme();
+  const styles = useStyles();
+
+  const variantStyles: Record<ButtonVariant, { bg: string; text: string; border: string }> = {
+    primary: {
+      bg: theme.colors.accent,
+      text: theme.colors.bgBase,
+      border: theme.colors.accent,
+    },
+    success: {
+      bg: theme.colors.green,
+      text: '#ffffff',
+      border: theme.colors.green,
+    },
+    danger: {
+      bg: theme.colors.redMuted,
+      text: theme.colors.red,
+      border: 'transparent',
+    },
+    ghost: {
+      bg: 'transparent',
+      text: theme.colors.textSecondary,
+      border: theme.colors.border,
+    },
+  };
+
   const v = variantStyles[variant];
 
   return (
@@ -86,7 +84,7 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   base: {
     flexDirection: 'row',
     alignItems: 'center',

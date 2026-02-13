@@ -4,23 +4,25 @@
  */
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated } from 'react-native';
-import { createStyles } from '../utils/styles';
-import { theme } from '../constants/theme';
+import { makeStyles } from '../utils/styles';
+import { useTheme } from '../store/ThemeContext';
 import type { ToastMessage } from '../types';
 
 interface ToastContainerProps {
   toasts: ToastMessage[];
 }
 
-const toastColors: Record<string, { bg: string; text: string }> = {
-  success: { bg: theme.colors.green, text: theme.colors.bgBase },
-  error: { bg: theme.colors.red, text: '#ffffff' },
-  info: { bg: theme.colors.accent, text: theme.colors.bgBase },
-};
-
 const SingleToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
+  const styles = useStyles();
+  const { theme } = useTheme();
   const translateY = useRef(new Animated.Value(20)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+
+  const toastColors: Record<string, { bg: string; text: string }> = {
+    success: { bg: theme.colors.green, text: theme.colors.bgBase },
+    error: { bg: theme.colors.red, text: '#ffffff' },
+    info: { bg: theme.colors.accent, text: theme.colors.bgBase },
+  };
 
   useEffect(() => {
     Animated.parallel([
@@ -53,6 +55,7 @@ const SingleToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
 };
 
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts }) => {
+  const styles = useStyles();
   if (toasts.length === 0) return null;
 
   return (
@@ -64,7 +67,7 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts }) => {
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   container: {
     position: 'absolute',
     bottom: t.spacing.xl + 60,

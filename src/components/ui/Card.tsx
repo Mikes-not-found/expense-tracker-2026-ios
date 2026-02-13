@@ -4,7 +4,7 @@
  */
 import React, { type ReactNode } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
-import { createStyles } from '../../utils/styles';
+import { makeStyles } from '../../utils/styles';
 
 type CardVariant = 'surface' | 'elevated' | 'overlay';
 
@@ -18,13 +18,16 @@ export const Card: React.FC<CardProps> = ({
   variant = 'surface',
   children,
   style,
-}) => (
-  <View style={[styles.base, styles[variant], style]}>
-    {children}
-  </View>
-);
+}) => {
+  const styles = useStyles();
+  return (
+    <View style={[styles.base, styles[variant], style]}>
+      {children}
+    </View>
+  );
+};
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   base: {
     borderWidth: 1,
     borderColor: t.colors.border,

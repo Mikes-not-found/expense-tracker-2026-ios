@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.mike.expensetracker2026",
       "infoPlist": {
-        "CFBundleDevelopmentRegion": "en"
+        "CFBundleDevelopmentRegion": "en",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -38,6 +39,11 @@
           "iCloudContainerEnvironment": "Production"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "d3290cc0-d627-4caa-ae93-feaa58d33794"
+      }
+    }
   }
 }

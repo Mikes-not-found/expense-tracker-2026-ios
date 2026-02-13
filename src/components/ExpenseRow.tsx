@@ -5,8 +5,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Badge } from './ui/Badge';
-import { createStyles } from '../utils/styles';
-import { theme } from '../constants/theme';
+import { makeStyles } from '../utils/styles';
+import { useTheme } from '../store/ThemeContext';
 import type { Expense } from '../types';
 import type { MonthKey } from '../constants/categories';
 import { getMonthNumber } from '../constants/categories';
@@ -26,6 +26,8 @@ export const ExpenseRow: React.FC<ExpenseRowProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const styles = useStyles();
+  const { theme } = useTheme();
   const dateStr = `${String(expense.date).padStart(2, '0')}/${getMonthNumber(month)}/2026`;
 
   return (
@@ -65,7 +67,7 @@ export const ExpenseRow: React.FC<ExpenseRowProps> = ({
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   container: {
     paddingVertical: t.spacing.md,
     paddingHorizontal: t.spacing.md,

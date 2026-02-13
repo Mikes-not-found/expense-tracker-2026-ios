@@ -20,10 +20,12 @@ import { useHaptics } from '../hooks/useHaptics';
 
 import { months, monthNames, type MonthKey } from '../constants/categories';
 import { formatEuro } from '../utils/calculations';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 import type { Expense } from '../types';
 
 export const MonthScreen: React.FC = () => {
+  const styles = useStyles();
+
   const [activeMonth, setActiveMonth] = useState<MonthKey>(() => {
     const now = new Date();
     return months[now.getMonth()];
@@ -207,7 +209,7 @@ export const MonthScreen: React.FC = () => {
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   safe: {
     flex: 1,
     backgroundColor: t.colors.bgBase,

@@ -14,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { Button } from './ui/Button';
-import { createStyles } from '../utils/styles';
+import { makeStyles } from '../utils/styles';
 import { categorySubcategories, categoryNames } from '../constants/categories';
 import type { Expense } from '../types';
 
@@ -33,6 +33,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   onSave,
   onClose,
 }) => {
+  const styles = useStyles();
   const [form, setForm] = useState(emptyForm);
   const [showPrimaryPicker, setShowPrimaryPicker] = useState(false);
   const [showSecondaryPicker, setShowSecondaryPicker] = useState(false);
@@ -237,7 +238,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   );
 };
 
-const styles = createStyles((t) => ({
+const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
     backgroundColor: t.colors.bgSurface,
