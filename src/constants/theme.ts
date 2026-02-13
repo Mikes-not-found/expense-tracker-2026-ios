@@ -24,10 +24,10 @@ const shared = {
   },
 
   fonts: {
-    mono: 'Quicksand-Regular',
-    monoMedium: 'Quicksand-Medium',
-    monoSemiBold: 'Quicksand-SemiBold',
-    monoBold: 'Quicksand-Bold',
+    mono: 'Quicksand_400Regular',
+    monoMedium: 'Quicksand_500Medium',
+    monoSemiBold: 'Quicksand_600SemiBold',
+    monoBold: 'Quicksand_700Bold',
     sans: 'Inter-Regular',
     sansMedium: 'Inter-Medium',
     sansSemiBold: 'Inter-SemiBold',

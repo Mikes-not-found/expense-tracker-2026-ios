@@ -8,6 +8,12 @@ import { View, Text, ActivityIndicator } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
+import {
+  Quicksand_400Regular,
+  Quicksand_500Medium,
+  Quicksand_600SemiBold,
+  Quicksand_700Bold,
+} from '@expo-google-fonts/quicksand';
 import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -104,10 +110,10 @@ const AppInner: React.FC = () => {
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'Quicksand-Regular': require('./assets/fonts/Quicksand-Regular.ttf'),
-    'Quicksand-Medium': require('./assets/fonts/Quicksand-Medium.ttf'),
-    'Quicksand-SemiBold': require('./assets/fonts/Quicksand-SemiBold.ttf'),
-    'Quicksand-Bold': require('./assets/fonts/Quicksand-Bold.ttf'),
+    Quicksand_400Regular,
+    Quicksand_500Medium,
+    Quicksand_600SemiBold,
+    Quicksand_700Bold,
     'Inter-Regular': require('./assets/fonts/Inter-Regular.ttf'),
     'Inter-Medium': require('./assets/fonts/Inter-Medium.ttf'),
     'Inter-SemiBold': require('./assets/fonts/Inter-SemiBold.ttf'),
