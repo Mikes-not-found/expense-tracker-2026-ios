@@ -211,17 +211,6 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             </Button>
           </View>
 
-          {/* iOS Done button for number-pad / decimal-pad keyboards */}
-          {Platform.OS === 'ios' && (
-            <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
-              <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
-                <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
-                  <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </InputAccessoryView>
-          )}
-
           <PickerSheet
             title="Select Category"
             options={categoryNames}
@@ -240,6 +229,17 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           />
         </View>
       </TouchableWithoutFeedback>
+
+      {/* iOS Done button — MUST be outside TouchableWithoutFeedback to receive nativeID */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </Modal>
   );
 };

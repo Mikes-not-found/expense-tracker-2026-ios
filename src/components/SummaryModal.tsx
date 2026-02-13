@@ -1,7 +1,6 @@
 /**
  * SummaryModal — kawaii Kakeibo-style monthly summary editor.
- * Keyboard dismiss: tapping outside inputs closes keyboard.
- * iOS gets a Done button via InputAccessoryView.
+ * Footer stays fixed — keyboard dismissed via Done button or tapping outside.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -9,7 +8,6 @@ import {
   View,
   Text,
   TextInput,
-  KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -63,10 +61,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
       onRequestClose={handleClose}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <KeyboardAvoidingView
-          style={styles.root}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+        <View style={styles.root}>
           <View style={styles.header}>
             <Text style={styles.title}>{'\u{1F33F}'} {title}</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
@@ -97,19 +92,19 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
               <Button variant="primary" onPress={handleSave}>{'\u{1F4BE}'} Save</Button>
             </View>
           </View>
-
-          {/* iOS Done button above keyboard */}
-          {Platform.OS === 'ios' && (
-            <InputAccessoryView nativeID={SUMMARY_ACCESSORY_ID}>
-              <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
-                <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
-                  <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
-                </TouchableOpacity>
-              </View>
-            </InputAccessoryView>
-          )}
-        </KeyboardAvoidingView>
+        </View>
       </TouchableWithoutFeedback>
+
+      {/* iOS Done button above keyboard — MUST be outside TouchableWithoutFeedback */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={SUMMARY_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </Modal>
   );
 };
