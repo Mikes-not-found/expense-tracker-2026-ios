@@ -66,9 +66,11 @@ export const DashboardScreen: React.FC = () => {
         haptics.success();
         showToast('Excel imported successfully', 'success');
       }
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Excel import error:', err);
       haptics.error();
-      showToast('Error importing Excel', 'error');
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      showToast(`Import failed: ${msg}`, 'error');
     }
   }, [importData, haptics, showToast]);
 
@@ -77,9 +79,11 @@ export const DashboardScreen: React.FC = () => {
       await downloadExcel(expenses, summaries, workbook);
       haptics.success();
       showToast('Excel exported', 'success');
-    } catch (err) {
+    } catch (err: unknown) {
+      console.error('Excel export error:', err);
       haptics.error();
-      showToast('Error exporting Excel', 'error');
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      showToast(`Export failed: ${msg}`, 'error');
     }
   }, [expenses, summaries, workbook, haptics, showToast]);
 

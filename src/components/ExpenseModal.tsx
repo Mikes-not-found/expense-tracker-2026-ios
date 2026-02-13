@@ -1,5 +1,7 @@
 /**
  * ExpenseModal — kawaii expense form with pastel pink styling.
+ * Keyboard dismiss: tapping outside inputs closes keyboard.
+ * iOS number-pad gets a Done button via InputAccessoryView.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -9,12 +11,15 @@ import {
   TextInput,
   ScrollView,
   TouchableOpacity,
-  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
+  Keyboard,
   Platform,
+  InputAccessoryView,
 } from 'react-native';
 import { Button } from './ui/Button';
 import { PickerSheet } from './PickerSheet';
 import { makeStyles } from '../utils/styles';
+import { useTheme } from '../store/ThemeContext';
 import { categorySubcategories, categoryNames } from '../constants/categories';
 import type { Expense } from '../types';
 
@@ -26,6 +31,7 @@ interface ExpenseModalProps {
 }
 
 const emptyForm = { name: '', date: '', amount: '', primary: '', secondary: '' };
+const INPUT_ACCESSORY_ID = 'expense-modal-done';
 
 export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   visible,
@@ -34,6 +40,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   onClose,
 }) => {
   const styles = useStyles();
+  const { theme } = useTheme();
   const [form, setForm] = useState(emptyForm);
   const [primarySheetVisible, setPrimarySheetVisible] = useState(false);
   const [secondarySheetVisible, setSecondarySheetVisible] = useState(false);
@@ -70,6 +77,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
   const handleSave = useCallback(() => {
     if (!isValid) return;
+    Keyboard.dismiss();
     onSave({
       name: form.name.trim(),
       date: parseInt(form.date, 10),
@@ -78,6 +86,11 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       secondary: form.secondary,
     });
   }, [form, isValid, onSave]);
+
+  const handleClose = useCallback(() => {
+    Keyboard.dismiss();
+    onClose();
+  }, [onClose]);
 
   const selectPrimary = useCallback((cat: string) => {
     setForm((f) => ({ ...f, primary: cat, secondary: '' }));
@@ -94,120 +107,138 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <KeyboardAvoidingView
-        style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-      >
-        <View style={styles.header}>
-          <Text style={styles.title}>
-            {expense ? '\u{270E}\uFE0F Edit Expense' : '\u{2795} New Expense'}
-          </Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>{'\u2715'}</Text>
-          </TouchableOpacity>
-        </View>
-
-        <ScrollView
-          style={styles.body}
-          keyboardShouldPersistTaps="handled"
-          keyboardDismissMode="interactive"
-          showsVerticalScrollIndicator={false}
-        >
-          <Text style={styles.label}>{'\u{1F4DD}'} EXPENSE NAME</Text>
-          <TextInput
-            style={styles.input}
-            value={form.name}
-            onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-            placeholder="e.g. Grocery shopping"
-            placeholderTextColor="#a8bfa0"
-            autoFocus={false}
-          />
-
-          <View style={styles.row}>
-            <View style={styles.halfField}>
-              <Text style={styles.label}>{'\u{1F4C5}'} DAY</Text>
-              <TextInput
-                style={styles.input}
-                value={form.date}
-                onChangeText={(v) => setForm((f) => ({ ...f, date: v }))}
-                placeholder="1-31"
-                placeholderTextColor="#a8bfa0"
-                keyboardType="number-pad"
-                maxLength={2}
-              />
-            </View>
-            <View style={styles.halfField}>
-              <Text style={styles.label}>{'\u{1F4B0}'} AMOUNT ({'\u20AC'})</Text>
-              <TextInput
-                style={styles.input}
-                value={form.amount}
-                onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
-                placeholder="0.00"
-                placeholderTextColor="#a8bfa0"
-                keyboardType="decimal-pad"
-              />
-            </View>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <View style={styles.root}>
+          <View style={styles.header}>
+            <Text style={styles.title}>
+              {expense ? '\u{270E}\uFE0F Edit Expense' : '\u{2795} New Expense'}
+            </Text>
+            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
+              <Text style={styles.closeText}>{'\u2715'}</Text>
+            </TouchableOpacity>
           </View>
 
-          <Text style={styles.label}>{'\u{1F3F7}\uFE0F'} CATEGORY</Text>
-          <TouchableOpacity
-            style={styles.picker}
-            onPress={() => setPrimarySheetVisible(true)}
+          <ScrollView
+            style={styles.body}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
+            showsVerticalScrollIndicator={false}
           >
-            <Text style={form.primary ? styles.pickerText : styles.pickerPlaceholder}>
-              {form.primary || 'Select...'}
-            </Text>
-            <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
-          </TouchableOpacity>
+            <Text style={styles.label}>{'\u{1F4DD}'} EXPENSE NAME</Text>
+            <TextInput
+              style={styles.input}
+              value={form.name}
+              onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
+              placeholder="e.g. Grocery shopping"
+              placeholderTextColor="#a8bfa0"
+              autoFocus={false}
+              returnKeyType="next"
+            />
 
-          <Text style={styles.label}>{'\u{1F4CC}'} SUBCATEGORY</Text>
-          <TouchableOpacity
-            style={[styles.picker, !form.primary && styles.pickerDisabled]}
-            onPress={() => {
-              if (form.primary) setSecondarySheetVisible(true);
-            }}
-            disabled={!form.primary}
-          >
-            <Text style={form.secondary ? styles.pickerText : styles.pickerPlaceholder}>
-              {form.secondary || (form.primary ? 'Select...' : 'Select category first...')}
-            </Text>
-            <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
-          </TouchableOpacity>
+            <View style={styles.row}>
+              <View style={styles.halfField}>
+                <Text style={styles.label}>{'\u{1F4C5}'} DAY</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.date}
+                  onChangeText={(v) => setForm((f) => ({ ...f, date: v }))}
+                  placeholder="1-31"
+                  placeholderTextColor="#a8bfa0"
+                  keyboardType="number-pad"
+                  maxLength={2}
+                  inputAccessoryViewID={Platform.OS === 'ios' ? INPUT_ACCESSORY_ID : undefined}
+                />
+              </View>
+              <View style={styles.halfField}>
+                <Text style={styles.label}>{'\u{1F4B0}'} AMOUNT ({'\u20AC'})</Text>
+                <TextInput
+                  style={styles.input}
+                  value={form.amount}
+                  onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
+                  placeholder="0.00"
+                  placeholderTextColor="#a8bfa0"
+                  keyboardType="decimal-pad"
+                  inputAccessoryViewID={Platform.OS === 'ios' ? INPUT_ACCESSORY_ID : undefined}
+                />
+              </View>
+            </View>
 
-          <View style={{ height: 40 }} />
-        </ScrollView>
+            <Text style={styles.label}>{'\u{1F3F7}\uFE0F'} CATEGORY</Text>
+            <TouchableOpacity
+              style={styles.picker}
+              onPress={() => {
+                Keyboard.dismiss();
+                setPrimarySheetVisible(true);
+              }}
+            >
+              <Text style={form.primary ? styles.pickerText : styles.pickerPlaceholder}>
+                {form.primary || 'Select...'}
+              </Text>
+              <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
+            </TouchableOpacity>
 
-        <View style={styles.actions}>
-          <Button variant="ghost" onPress={onClose}>Cancel</Button>
-          <Button
-            variant="primary"
-            onPress={handleSave}
-            disabled={!isValid}
-          >
-            {'\u{1F4BE}'} Save Expense
-          </Button>
+            <Text style={styles.label}>{'\u{1F4CC}'} SUBCATEGORY</Text>
+            <TouchableOpacity
+              style={[styles.picker, !form.primary && styles.pickerDisabled]}
+              onPress={() => {
+                if (form.primary) {
+                  Keyboard.dismiss();
+                  setSecondarySheetVisible(true);
+                }
+              }}
+              disabled={!form.primary}
+            >
+              <Text style={form.secondary ? styles.pickerText : styles.pickerPlaceholder}>
+                {form.secondary || (form.primary ? 'Select...' : 'Select category first...')}
+              </Text>
+              <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
+            </TouchableOpacity>
+
+            <View style={{ height: 40 }} />
+          </ScrollView>
+
+          <View style={styles.actions}>
+            <Button variant="ghost" onPress={handleClose}>Cancel</Button>
+            <Button
+              variant="primary"
+              onPress={handleSave}
+              disabled={!isValid}
+            >
+              {'\u{1F4BE}'} Save Expense
+            </Button>
+          </View>
+
+          {/* iOS Done button for number-pad / decimal-pad keyboards */}
+          {Platform.OS === 'ios' && (
+            <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
+              <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+                <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+                  <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            </InputAccessoryView>
+          )}
+
+          <PickerSheet
+            title="Select Category"
+            options={categoryNames}
+            selected={form.primary}
+            onSelect={selectPrimary}
+            onDismiss={() => setPrimarySheetVisible(false)}
+            visible={primarySheetVisible}
+          />
+          <PickerSheet
+            title="Select Subcategory"
+            options={subcategories}
+            selected={form.secondary}
+            onSelect={selectSecondary}
+            onDismiss={() => setSecondarySheetVisible(false)}
+            visible={secondarySheetVisible}
+          />
         </View>
-
-        <PickerSheet
-          title="Select Category"
-          options={categoryNames}
-          selected={form.primary}
-          onSelect={selectPrimary}
-          onDismiss={() => setPrimarySheetVisible(false)}
-          visible={primarySheetVisible}
-        />
-        <PickerSheet
-          title="Select Subcategory"
-          options={subcategories}
-          selected={form.secondary}
-          onSelect={selectSecondary}
-          onDismiss={() => setSecondarySheetVisible(false)}
-          visible={secondarySheetVisible}
-        />
-      </KeyboardAvoidingView>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -316,5 +347,21 @@ const useStyles = makeStyles((t) => ({
     borderTopColor: t.colors.border,
     paddingBottom: t.spacing.xl,
     backgroundColor: t.colors.bgSurface,
+  },
+  accessoryBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderTopWidth: 1,
+  },
+  doneButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  doneText: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.md,
   },
 }));

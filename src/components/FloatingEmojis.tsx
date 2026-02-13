@@ -2,6 +2,7 @@
  * FloatingEmojis — animated floating emoji background layer.
  * Recreates the CSS floatEmoji animation from the kawaii HTML.
  * Uses React Native Animated API for smooth float-up animations.
+ * Slow, dreamy pace — duration 25-50s, delays 5-25s.
  */
 import React, { useEffect, useRef, useMemo } from 'react';
 import { View, Text, Animated, Dimensions, StyleSheet } from 'react-native';
@@ -44,12 +45,12 @@ const FloatingEmoji: React.FC<{ config: FloatingEmojiConfig }> = ({ config }) =>
         }),
         Animated.sequence([
           Animated.timing(opacity, {
-            toValue: 0.6,
+            toValue: 0.45,
             duration: config.duration * 0.15,
             useNativeDriver: true,
           }),
           Animated.timing(opacity, {
-            toValue: 0.6,
+            toValue: 0.45,
             duration: config.duration * 0.6,
             useNativeDriver: true,
           }),
@@ -65,7 +66,7 @@ const FloatingEmoji: React.FC<{ config: FloatingEmojiConfig }> = ({ config }) =>
           useNativeDriver: true,
         }),
       ]).start(() => {
-        setTimeout(animate, config.delay * 0.3);
+        setTimeout(animate, config.delay * 0.5);
       });
     };
 
@@ -75,7 +76,7 @@ const FloatingEmoji: React.FC<{ config: FloatingEmojiConfig }> = ({ config }) =>
 
   const spin = rotate.interpolate({
     inputRange: [0, 1],
-    outputRange: ['-20deg', '20deg'],
+    outputRange: ['-15deg', '15deg'],
   });
 
   return (
@@ -100,9 +101,9 @@ export const FloatingEmojis: React.FC = () => {
     EMOJIS.map((emoji, i) => ({
       emoji,
       left: Math.random() * (SCREEN_WIDTH - 30),
-      size: 16 + Math.random() * 16,
-      duration: 12000 + Math.random() * 18000,
-      delay: Math.random() * 15000,
+      size: 14 + Math.random() * 14,
+      duration: 25000 + Math.random() * 25000,
+      delay: 5000 + Math.random() * 20000,
       startY: SCREEN_HEIGHT + 50 + Math.random() * 200,
     })),
     []

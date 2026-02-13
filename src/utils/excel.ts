@@ -3,7 +3,7 @@
  * Uses expo-document-picker, expo-file-system, expo-sharing + xlsx.
  */
 import * as DocumentPicker from 'expo-document-picker';
-import * as LegacyFS from 'expo-file-system/legacy';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import * as XLSX from 'xlsx';
 
@@ -32,8 +32,8 @@ export const importExcel = async (): Promise<ImportResult | null> => {
   if (result.canceled || !result.assets?.[0]) return null;
 
   const fileUri = result.assets[0].uri;
-  const base64 = await LegacyFS.readAsStringAsync(fileUri, {
-    encoding: LegacyFS.EncodingType.Base64,
+  const base64 = await FileSystem.readAsStringAsync(fileUri, {
+    encoding: FileSystem.EncodingType.Base64,
   });
 
   const workbook = XLSX.read(base64, { type: 'base64', cellFormula: true, cellStyles: true });
@@ -192,10 +192,10 @@ export const downloadExcel = async (
   const wbOut = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
   const today = new Date().toISOString().split('T')[0];
   const fileName = `2026 - Expences - ${today}.xlsx`;
-  const fileUri = `${LegacyFS.cacheDirectory}${fileName}`;
+  const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
 
-  await LegacyFS.writeAsStringAsync(fileUri, wbOut, {
-    encoding: LegacyFS.EncodingType.Base64,
+  await FileSystem.writeAsStringAsync(fileUri, wbOut, {
+    encoding: FileSystem.EncodingType.Base64,
   });
 
   await Sharing.shareAsync(fileUri, {
