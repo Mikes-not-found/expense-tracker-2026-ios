@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "Expense Tracker 2026",
+    "name": "Celi Expenses",
     "slug": "expense-tracker-2026",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0a0e14"
+      "backgroundColor": "#fff5f7"
     },
     "ios": {
       "supportsTablet": true,
@@ -23,7 +23,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#0a0e14"
+        "backgroundColor": "#fff5f7"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.mike.expensetracker2026"
