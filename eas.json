@@ -14,20 +14,17 @@
       },
       "distribution": "internal"
     },
+    "device": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": false
+      }
+    },
     "production": {
       "ios": {
         "distribution": "store"
       },
       "autoIncrement": true
-    }
-  },
-  "submit": {
-    "production": {
-      "ios": {
-        "appleId": "michelescarciglia20@gmail.com",
-        "ascAppId": "",
-        "appleTeamId": ""
-      }
     }
   }
 }
