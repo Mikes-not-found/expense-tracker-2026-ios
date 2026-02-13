@@ -1,14 +1,13 @@
 /**
  * DashboardScreen — kawaii annual overview with pink/green pastels.
- * Floating emojis, pastel stat cards, emoji categories.
+ * Floating emojis, pastel stat cards, tabbed breakdown.
  */
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, Text, TouchableOpacity } from 'react-native';
+import { View, ScrollView, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StatCard } from '../components/StatCard';
 import { SpendingRow } from '../components/SpendingRow';
-import { FilterBar } from '../components/FilterBar';
 import { PickerSheet } from '../components/PickerSheet';
 import { FloatingEmojis } from '../components/FloatingEmojis';
 import { Button } from '../components/ui/Button';
@@ -36,6 +35,8 @@ import {
 import { importExcel, downloadExcel } from '../utils/excel';
 import { makeStyles } from '../utils/styles';
 
+type BreakdownTab = 'monthly' | 'category' | 'subcategory';
+
 export const DashboardScreen: React.FC = () => {
   const dashboard = useDashboard();
   const { expenses, summaries, workbook, importData } = useDataActions();
@@ -43,11 +44,13 @@ export const DashboardScreen: React.FC = () => {
   const haptics = useHaptics();
   const { theme, isDark, toggleTheme } = useTheme();
   const styles = useStyles();
+  const { width: screenWidth } = useWindowDimensions();
 
   const [filterMonth, setFilterMonth] = useState<MonthKey | ''>('');
   const [filterCategory, setFilterCategory] = useState('');
   const [monthPickerVisible, setMonthPickerVisible] = useState(false);
   const [categoryPickerVisible, setCategoryPickerVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState<BreakdownTab>('monthly');
 
   const filteredTotal = calculateFilteredTotal(expenses, filterMonth, filterCategory);
 
@@ -109,6 +112,15 @@ export const DashboardScreen: React.FC = () => {
   const monthDisplayNames = months.map((m) => monthShortNames[m]);
   const selectedMonthDisplay = filterMonth ? monthShortNames[filterMonth] : '';
 
+  // Card width: 2 per row, accounting for padding and gap
+  const cardWidth = (screenWidth - 16 * 2 - 16) / 2;
+
+  const tabs: { key: BreakdownTab; label: string; emoji: string }[] = [
+    { key: 'monthly', label: 'Monthly', emoji: '\u{1F4C5}' },
+    { key: 'category', label: 'Category', emoji: '\u{1F3F7}\uFE0F' },
+    { key: 'subcategory', label: 'Sub', emoji: '\u{1F4CB}' },
+  ];
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <FloatingEmojis />
@@ -124,107 +136,132 @@ export const DashboardScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Toolbar */}
+        {/* Toolbar — Import/Export + Filters */}
         <View style={styles.toolbar}>
           <Button variant="success" onPress={handleImport} small>
-            {'\u{1F4E5}'} Import Excel
+            {'\u{1F4E5}'} Import
           </Button>
           <Button variant="primary" onPress={handleExport} small>
-            {'\u{1F4E4}'} Export Excel
+            {'\u{1F4E4}'} Export
           </Button>
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={() => setMonthPickerVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={filterMonth ? styles.filterChipTextActive : styles.filterChipText}>
+              {filterMonth ? monthShortNames[filterMonth] : '\u{1F4C5} All'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={() => setCategoryPickerVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Text style={filterCategory ? styles.filterChipTextActive : styles.filterChipText} numberOfLines={1}>
+              {filterCategory || '\u{1F3F7}\uFE0F All'}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Filters */}
-        <FilterBar
-          filterMonth={filterMonth}
-          filterCategory={filterCategory}
-          filteredTotal={filteredTotal}
-          onOpenMonthPicker={() => setMonthPickerVisible(true)}
-          onOpenCategoryPicker={() => setCategoryPickerVisible(true)}
-        />
+        {/* Filtered total */}
+        {(filterMonth || filterCategory) ? (
+          <View style={styles.filteredBanner}>
+            <Text style={styles.filteredLabel}>Filtered Total</Text>
+            <Text style={styles.filteredValue}>{formatEuro(filteredTotal)}</Text>
+          </View>
+        ) : null}
 
-        {/* Stats Grid */}
+        {/* Stats Grid — 2x2 equal cards */}
         <View style={styles.statsGrid}>
           <StatCard
             label="Total Year 2026"
             value={formatEuro(dashboard.yearTotal)}
             emoji={'\u{1F4B0}'}
+            style={{ width: cardWidth }}
           />
           <StatCard
-            label="Monthly Average"
+            label="Monthly Avg"
             value={formatEuro(dashboard.monthlyAverage)}
             emoji={'\u{1F4CA}'}
             valueColor={theme.colors.amber}
+            style={{ width: cardWidth }}
           />
           <StatCard
             label="Top Month"
             value={dashboard.topMonth}
             emoji={'\u{1F3C6}'}
             valueColor={theme.colors.green}
+            style={{ width: cardWidth }}
           />
           <StatCard
             label="Total Entries"
             value={String(dashboard.totalEntries)}
             emoji={'\u{1F4DD}'}
+            style={{ width: cardWidth }}
           />
         </View>
 
-        {/* Monthly Breakdown */}
+        {/* Breakdown Tabs */}
+        <View style={styles.tabBar}>
+          {tabs.map((tab) => (
+            <TouchableOpacity
+              key={tab.key}
+              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
+              onPress={() => setActiveTab(tab.key)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
+                {tab.emoji} {tab.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {/* Active breakdown content */}
         <Card style={styles.sectionCard}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{'\u{1F4C5}'} Monthly Breakdown</Text>
-          </View>
           <View style={styles.sectionBody}>
-            {months.map((m) => (
-              <SpendingRow
-                key={m}
-                name={monthShortNames[m]}
-                amount={dashboard.monthlyTotals[m]}
-                total={dashboard.yearTotal}
-                emoji={monthEmojis[m]}
-              />
-            ))}
+            {activeTab === 'monthly' &&
+              months.map((m) => (
+                <SpendingRow
+                  key={m}
+                  name={monthShortNames[m]}
+                  amount={dashboard.monthlyTotals[m]}
+                  total={dashboard.yearTotal}
+                  emoji={monthEmojis[m]}
+                />
+              ))}
+
+            {activeTab === 'category' &&
+              (sortedCategories.length > 0 ? (
+                sortedCategories.map(([cat, amount]) => (
+                  <SpendingRow
+                    key={cat}
+                    name={cat}
+                    amount={amount}
+                    total={dashboard.yearTotal}
+                    emoji={categoryEmojis[cat]}
+                  />
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No category data yet</Text>
+              ))}
+
+            {activeTab === 'subcategory' &&
+              (sortedSubcategories.length > 0 ? (
+                sortedSubcategories.map(([sub, amount]) => (
+                  <SpendingRow
+                    key={sub}
+                    name={sub}
+                    amount={amount}
+                    total={dashboard.yearTotal}
+                  />
+                ))
+              ) : (
+                <Text style={styles.emptyText}>No subcategory data yet</Text>
+              ))}
           </View>
         </Card>
-
-        {/* By Category */}
-        {sortedCategories.length > 0 && (
-          <Card style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{'\u{1F3F7}\uFE0F'} By Category</Text>
-            </View>
-            <View style={styles.sectionBody}>
-              {sortedCategories.map(([cat, amount]) => (
-                <SpendingRow
-                  key={cat}
-                  name={cat}
-                  amount={amount}
-                  total={dashboard.yearTotal}
-                  emoji={categoryEmojis[cat]}
-                />
-              ))}
-            </View>
-          </Card>
-        )}
-
-        {/* Subcategories */}
-        {sortedSubcategories.length > 0 && (
-          <Card style={styles.sectionCard}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>{'\u{1F4CB}'} Subcategories</Text>
-            </View>
-            <View style={styles.sectionBody}>
-              {sortedSubcategories.map(([sub, amount]) => (
-                <SpendingRow
-                  key={sub}
-                  name={sub}
-                  amount={amount}
-                  total={dashboard.yearTotal}
-                />
-              ))}
-            </View>
-          </Card>
-        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -268,13 +305,13 @@ const useStyles = makeStyles((t) => ({
   },
   content: {
     padding: t.spacing.md,
-    gap: t.spacing.lg,
+    gap: t.spacing.md,
   },
   headerSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: t.spacing.sm,
+    paddingBottom: t.spacing.xs,
   },
   appTitle: {
     fontFamily: t.fonts.monoBold,
@@ -303,28 +340,93 @@ const useStyles = makeStyles((t) => ({
   toolbar: {
     flexDirection: 'row',
     gap: t.spacing.sm,
+    alignItems: 'center',
+    flexWrap: 'wrap',
+  },
+  filterChip: {
+    paddingVertical: t.spacing.xs + 3,
+    paddingHorizontal: t.spacing.md,
+    backgroundColor: t.colors.bgSurface,
+    borderWidth: 1.5,
+    borderColor: t.colors.border,
+    borderRadius: t.radius.full,
+  },
+  filterChipText: {
+    fontFamily: t.fonts.monoMedium,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textMuted,
+  },
+  filterChipTextActive: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.sm,
+    color: t.colors.accent,
+  },
+  filteredBanner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: t.spacing.sm + 2,
+    paddingHorizontal: t.spacing.md,
+    backgroundColor: t.colors.accentMuted,
+    borderWidth: 1.5,
+    borderColor: t.colors.border,
+    borderRadius: t.radius.md,
+  },
+  filteredLabel: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.xs + 1,
+    color: t.colors.textMuted,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  filteredValue: {
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.lg + 2,
+    color: t.colors.accent,
   },
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: t.spacing.md,
+    justifyContent: 'space-between',
+  },
+  tabBar: {
+    flexDirection: 'row',
+    backgroundColor: t.colors.bgSurface,
+    borderRadius: t.radius.full,
+    borderWidth: 1.5,
+    borderColor: t.colors.border,
+    padding: 3,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: t.spacing.sm + 2,
+    alignItems: 'center',
+    borderRadius: t.radius.full,
+  },
+  tabActive: {
+    backgroundColor: t.colors.accent,
+  },
+  tabText: {
+    fontFamily: t.fonts.monoMedium,
+    fontSize: t.fontSize.sm,
+    color: t.colors.textMuted,
+  },
+  tabTextActive: {
+    fontFamily: t.fonts.monoBold,
+    color: '#ffffff',
   },
   sectionCard: {
     overflow: 'hidden',
   },
-  sectionHeader: {
-    paddingVertical: t.spacing.md,
-    paddingHorizontal: t.spacing.lg,
-    borderBottomWidth: 1,
-    borderBottomColor: t.colors.border,
-    backgroundColor: t.colors.bgElevated,
-  },
-  sectionTitle: {
-    fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.md + 1,
-    color: t.colors.textPrimary,
-  },
   sectionBody: {
     paddingVertical: t.spacing.sm,
+  },
+  emptyText: {
+    fontFamily: t.fonts.monoMedium,
+    fontSize: t.fontSize.md,
+    color: t.colors.textMuted,
+    textAlign: 'center',
+    paddingVertical: t.spacing.xl,
   },
 }));

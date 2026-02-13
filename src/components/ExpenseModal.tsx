@@ -98,7 +98,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     >
       <KeyboardAvoidingView
         style={styles.root}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
         <View style={styles.header}>
           <Text style={styles.title}>
@@ -109,7 +110,12 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </TouchableOpacity>
         </View>
 
-        <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          style={styles.body}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={styles.label}>{'\u{1F4DD}'} EXPENSE NAME</Text>
           <TextInput
             style={styles.input}
@@ -117,7 +123,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
             placeholder="e.g. Grocery shopping"
             placeholderTextColor="#a8bfa0"
-            autoFocus={!expense}
+            autoFocus={false}
           />
 
           <View style={styles.row}>
