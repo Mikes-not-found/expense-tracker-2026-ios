@@ -1,7 +1,7 @@
 /**
- * Design Tokens — Single Source of Truth.
- * Supports both dark and light themes.
- * Use `as const` for full type inference.
+ * Design Tokens — Kawaii Theme (Celi Expenses).
+ * Pink/green pastel palette inspired by the HTML kawaii version.
+ * Quicksand font for headings, Inter for body.
  */
 
 /** Shared tokens (spacing, radius, fonts, fontSize) — same in both themes */
@@ -16,18 +16,18 @@ const shared = {
   },
 
   radius: {
-    sm: 8,
-    md: 12,
-    lg: 16,
-    xl: 24,
+    sm: 12,
+    md: 18,
+    lg: 22,
+    xl: 28,
     full: 9999,
   },
 
   fonts: {
-    mono: 'JetBrainsMono-Regular',
-    monoMedium: 'JetBrainsMono-Medium',
-    monoSemiBold: 'JetBrainsMono-SemiBold',
-    monoBold: 'JetBrainsMono-Bold',
+    mono: 'Quicksand-Regular',
+    monoMedium: 'Quicksand-Medium',
+    monoSemiBold: 'Quicksand-SemiBold',
+    monoBold: 'Quicksand-Bold',
     sans: 'Inter-Regular',
     sansMedium: 'Inter-Medium',
     sansSemiBold: 'Inter-SemiBold',
@@ -45,76 +45,76 @@ const shared = {
   },
 } as const;
 
-/** Dark theme color palette */
-const darkColors = {
-  bgBase: '#0a0e14',
-  bgSurface: '#111820',
-  bgElevated: '#1a2230',
-  bgOverlay: '#1e2a3a',
-  bgInteractive: '#253040',
-
-  accent: '#4fc3f7',
-  accentHover: '#81d4fa',
-  accentMuted: 'rgba(79, 195, 247, 0.12)',
-  accentGlow: 'rgba(79, 195, 247, 0.25)',
-
-  green: '#66bb6a',
-  greenMuted: 'rgba(102, 187, 106, 0.12)',
-  red: '#ef5350',
-  redMuted: 'rgba(239, 83, 80, 0.12)',
-  amber: '#ffca28',
-  amberMuted: 'rgba(255, 202, 40, 0.12)',
-  purple: '#ab47bc',
-  purpleMuted: 'rgba(171, 71, 188, 0.12)',
-
-  textPrimary: '#e3e8ef',
-  textSecondary: '#8899aa',
-  textMuted: '#556677',
-
-  border: 'rgba(255, 255, 255, 0.06)',
-  borderHover: 'rgba(255, 255, 255, 0.12)',
-  borderActive: 'rgba(79, 195, 247, 0.3)',
-
-  shadow: '#000000',
-  card: '#111820',
-  tabBar: '#111820',
-  statusBar: 'light' as const,
-} as const;
-
-/** Light theme color palette */
-const lightColors = {
-  bgBase: '#f5f6fa',
+/** Kawaii light theme — primary palette */
+const kawaiiLightColors = {
+  bgBase: '#fef9f0',
   bgSurface: '#ffffff',
-  bgElevated: '#f0f1f5',
-  bgOverlay: '#e8eaf0',
-  bgInteractive: '#e2e4ea',
+  bgElevated: '#fff5f8',
+  bgOverlay: '#ffeef8',
+  bgInteractive: '#ffe4e1',
 
-  accent: '#1e88e5',
-  accentHover: '#1565c0',
-  accentMuted: 'rgba(30, 136, 229, 0.10)',
-  accentGlow: 'rgba(30, 136, 229, 0.18)',
+  accent: '#ff6b9d',
+  accentHover: '#ff4081',
+  accentMuted: 'rgba(255, 107, 157, 0.12)',
+  accentGlow: 'rgba(255, 107, 157, 0.25)',
 
-  green: '#43a047',
-  greenMuted: 'rgba(67, 160, 71, 0.10)',
-  red: '#e53935',
-  redMuted: 'rgba(229, 57, 53, 0.10)',
-  amber: '#f9a825',
-  amberMuted: 'rgba(249, 168, 37, 0.10)',
-  purple: '#8e24aa',
-  purpleMuted: 'rgba(142, 36, 170, 0.10)',
+  green: '#7cb342',
+  greenMuted: 'rgba(124, 179, 66, 0.12)',
+  red: '#ef5350',
+  redMuted: 'rgba(239, 83, 80, 0.10)',
+  amber: '#ffb74d',
+  amberMuted: 'rgba(255, 183, 77, 0.12)',
+  purple: '#ab47bc',
+  purpleMuted: 'rgba(171, 71, 188, 0.10)',
 
-  textPrimary: '#1a1a2e',
-  textSecondary: '#5a6070',
-  textMuted: '#9099a8',
+  textPrimary: '#558b2f',
+  textSecondary: '#6d8b74',
+  textMuted: '#a8bfa0',
 
-  border: 'rgba(0, 0, 0, 0.08)',
-  borderHover: 'rgba(0, 0, 0, 0.14)',
-  borderActive: 'rgba(30, 136, 229, 0.3)',
+  border: '#ffe4e1',
+  borderHover: '#ffc0cb',
+  borderActive: 'rgba(255, 107, 157, 0.4)',
 
-  shadow: 'rgba(0, 0, 0, 0.08)',
+  shadow: 'rgba(255, 154, 158, 0.15)',
   card: '#ffffff',
   tabBar: '#ffffff',
   statusBar: 'dark' as const,
+} as const;
+
+/** Kawaii dark theme — soft pastels on dark */
+const kawaiiDarkColors = {
+  bgBase: '#1a0f1e',
+  bgSurface: '#241828',
+  bgElevated: '#2d1e33',
+  bgOverlay: '#352540',
+  bgInteractive: '#3d2c48',
+
+  accent: '#ff8fb4',
+  accentHover: '#ffaac8',
+  accentMuted: 'rgba(255, 143, 180, 0.15)',
+  accentGlow: 'rgba(255, 143, 180, 0.30)',
+
+  green: '#9ccc65',
+  greenMuted: 'rgba(156, 204, 101, 0.15)',
+  red: '#ef5350',
+  redMuted: 'rgba(239, 83, 80, 0.15)',
+  amber: '#ffcc80',
+  amberMuted: 'rgba(255, 204, 128, 0.15)',
+  purple: '#ce93d8',
+  purpleMuted: 'rgba(206, 147, 216, 0.15)',
+
+  textPrimary: '#f8e8f0',
+  textSecondary: '#c8a8c0',
+  textMuted: '#886880',
+
+  border: 'rgba(255, 143, 180, 0.12)',
+  borderHover: 'rgba(255, 143, 180, 0.20)',
+  borderActive: 'rgba(255, 143, 180, 0.35)',
+
+  shadow: '#000000',
+  card: '#241828',
+  tabBar: '#241828',
+  statusBar: 'light' as const,
 } as const;
 
 export type ThemeMode = 'dark' | 'light';
@@ -159,8 +159,8 @@ export interface Theme {
   fontSize: typeof shared.fontSize;
 }
 
-export const darkTheme: Theme = { colors: darkColors, ...shared };
-export const lightTheme: Theme = { colors: lightColors, ...shared };
+export const darkTheme: Theme = { colors: kawaiiDarkColors, ...shared };
+export const lightTheme: Theme = { colors: kawaiiLightColors, ...shared };
 
-/** Legacy default export for backward compat during migration */
-export const theme = darkTheme;
+/** Default export — kawaii light is the primary experience */
+export const theme = lightTheme;

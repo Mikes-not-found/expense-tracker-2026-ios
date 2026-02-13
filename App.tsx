@@ -1,10 +1,11 @@
 /**
- * App.tsx — Entry point.
- * Loads fonts, sets up providers (Theme + App), configures navigation.
- * Navigation theme reacts to ThemeContext mode.
+ * App.tsx — Entry point (Kawaii Edition).
+ * Loads Quicksand + Inter fonts, sets up providers, configures kawaii tab bar.
  */
+import 'react-native-gesture-handler';
 import React from 'react';
-import { View, ActivityIndicator } from 'react-native';
+import { View, Text, ActivityIndicator } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
@@ -16,44 +17,16 @@ import { ThemeProvider, useTheme } from './src/store/ThemeContext';
 import { AppProvider } from './src/store/AppContext';
 import { DashboardScreen } from './src/screens/DashboardScreen';
 import { MonthScreen } from './src/screens/MonthScreen';
-import { darkTheme } from './src/constants/theme';
+import { lightTheme } from './src/constants/theme';
 
 // Keep splash visible while fonts load
 SplashScreen.preventAutoHideAsync();
 
 const Tab = createBottomTabNavigator();
 
-const DashboardIcon = ({ color }: { color: string }) => (
-  <View style={{ width: 22, height: 22, justifyContent: 'center', alignItems: 'center' }}>
-    <View style={{ flexDirection: 'row', gap: 2 }}>
-      <View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: color }} />
-      <View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: color }} />
-    </View>
-    <View style={{ flexDirection: 'row', gap: 2, marginTop: 2 }}>
-      <View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: color }} />
-      <View style={{ width: 8, height: 8, borderRadius: 3, backgroundColor: color }} />
-    </View>
-  </View>
-);
-
-const CalendarIcon = ({ color }: { color: string }) => (
-  <View
-    style={{
-      width: 20,
-      height: 22,
-      borderRadius: 5,
-      borderWidth: 1.5,
-      borderColor: color,
-      justifyContent: 'flex-end',
-      alignItems: 'center',
-      paddingBottom: 3,
-    }}
-  >
-    <View style={{ flexDirection: 'row', gap: 2 }}>
-      <View style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: color }} />
-      <View style={{ width: 3, height: 3, borderRadius: 1, backgroundColor: color }} />
-    </View>
-  </View>
+/** Kawaii tab icon — emoji text */
+const TabIcon = ({ emoji, color }: { emoji: string; color: string }) => (
+  <Text style={{ fontSize: 22, color, textAlign: 'center' }}>{emoji}</Text>
 );
 
 /** Inner app — uses useTheme() for navigation theming */
@@ -87,15 +60,22 @@ const AppInner: React.FC = () => {
             tabBarStyle: {
               backgroundColor: theme.colors.tabBar,
               borderTopColor: theme.colors.border,
-              height: 80,
-              paddingBottom: 24,
-              paddingTop: 8,
+              borderTopWidth: 1.5,
+              height: 85,
+              paddingBottom: 26,
+              paddingTop: 10,
+              shadowColor: theme.colors.accent,
+              shadowOffset: { width: 0, height: -4 },
+              shadowOpacity: 0.08,
+              shadowRadius: 12,
+              elevation: 8,
             },
             tabBarActiveTintColor: theme.colors.accent,
             tabBarInactiveTintColor: theme.colors.textMuted,
             tabBarLabelStyle: {
-              fontFamily: theme.fonts.monoMedium,
+              fontFamily: theme.fonts.monoBold,
               fontSize: 11,
+              marginTop: 2,
             },
           }}
         >
@@ -103,14 +83,16 @@ const AppInner: React.FC = () => {
             name="Dashboard"
             component={DashboardScreen}
             options={{
-              tabBarIcon: ({ color }) => <DashboardIcon color={color} />,
+              tabBarLabel: 'Dashboard',
+              tabBarIcon: ({ color }) => <TabIcon emoji={'\u{1F338}'} color={color} />,
             }}
           />
           <Tab.Screen
             name="Months"
             component={MonthScreen}
             options={{
-              tabBarIcon: ({ color }) => <CalendarIcon color={color} />,
+              tabBarLabel: 'Months',
+              tabBarIcon: ({ color }) => <TabIcon emoji={'\u{1F4C5}'} color={color} />,
             }}
           />
         </Tab.Navigator>
@@ -122,10 +104,10 @@ const AppInner: React.FC = () => {
 
 export default function App() {
   const [fontsLoaded] = useFonts({
-    'JetBrainsMono-Regular': require('./assets/fonts/JetBrainsMono-Regular.ttf'),
-    'JetBrainsMono-Medium': require('./assets/fonts/JetBrainsMono-Medium.ttf'),
-    'JetBrainsMono-SemiBold': require('./assets/fonts/JetBrainsMono-SemiBold.ttf'),
-    'JetBrainsMono-Bold': require('./assets/fonts/JetBrainsMono-Bold.ttf'),
+    'Quicksand-Regular': require('./assets/fonts/Quicksand-Regular.ttf'),
+    'Quicksand-Medium': require('./assets/fonts/Quicksand-Medium.ttf'),
+    'Quicksand-SemiBold': require('./assets/fonts/Quicksand-SemiBold.ttf'),
+    'Quicksand-Bold': require('./assets/fonts/Quicksand-Bold.ttf'),
     'Inter-Regular': require('./assets/fonts/Inter-Regular.ttf'),
     'Inter-Medium': require('./assets/fonts/Inter-Medium.ttf'),
     'Inter-SemiBold': require('./assets/fonts/Inter-SemiBold.ttf'),
@@ -143,23 +125,26 @@ export default function App() {
       <View
         style={{
           flex: 1,
-          backgroundColor: darkTheme.colors.bgBase,
+          backgroundColor: lightTheme.colors.bgBase,
           justifyContent: 'center',
           alignItems: 'center',
         }}
       >
-        <ActivityIndicator size="large" color={darkTheme.colors.accent} />
+        <Text style={{ fontSize: 48, marginBottom: 16 }}>{'\u{1F338}'}</Text>
+        <ActivityIndicator size="large" color={lightTheme.colors.accent} />
       </View>
     );
   }
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <AppProvider>
-          <AppInner />
-        </AppProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <ThemeProvider>
+          <AppProvider>
+            <AppInner />
+          </AppProvider>
+        </ThemeProvider>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }

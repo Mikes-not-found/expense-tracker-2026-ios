@@ -1,6 +1,5 @@
 /**
- * ExpenseModal — form for adding/editing expenses.
- * Controlled form with validation. Uses native Modal.
+ * ExpenseModal — kawaii expense form with pastel pink styling.
  */
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -14,13 +13,14 @@ import {
   Platform,
 } from 'react-native';
 import { Button } from './ui/Button';
+import { PickerSheet } from './PickerSheet';
 import { makeStyles } from '../utils/styles';
 import { categorySubcategories, categoryNames } from '../constants/categories';
 import type { Expense } from '../types';
 
 interface ExpenseModalProps {
   visible: boolean;
-  expense: Expense | null; // null = new, filled = edit
+  expense: Expense | null;
   onSave: (expense: Expense) => void;
   onClose: () => void;
 }
@@ -35,8 +35,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 }) => {
   const styles = useStyles();
   const [form, setForm] = useState(emptyForm);
-  const [showPrimaryPicker, setShowPrimaryPicker] = useState(false);
-  const [showSecondaryPicker, setShowSecondaryPicker] = useState(false);
+  const [primarySheetVisible, setPrimarySheetVisible] = useState(false);
+  const [secondarySheetVisible, setSecondarySheetVisible] = useState(false);
 
   useEffect(() => {
     if (visible) {
@@ -51,8 +51,8 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       } else {
         setForm(emptyForm);
       }
-      setShowPrimaryPicker(false);
-      setShowSecondaryPicker(false);
+      setPrimarySheetVisible(false);
+      setSecondarySheetVisible(false);
     }
   }, [visible, expense]);
 
@@ -79,15 +79,15 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     });
   }, [form, isValid, onSave]);
 
-  const selectPrimary = (cat: string) => {
+  const selectPrimary = useCallback((cat: string) => {
     setForm((f) => ({ ...f, primary: cat, secondary: '' }));
-    setShowPrimaryPicker(false);
-  };
+    setPrimarySheetVisible(false);
+  }, []);
 
-  const selectSecondary = (sub: string) => {
+  const selectSecondary = useCallback((sub: string) => {
     setForm((f) => ({ ...f, secondary: sub }));
-    setShowSecondaryPicker(false);
-  };
+    setSecondarySheetVisible(false);
+  }, []);
 
   return (
     <Modal
@@ -101,128 +101,79 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{expense ? 'Edit Expense' : 'New Expense'}</Text>
+          <Text style={styles.title}>
+            {expense ? '\u{270E}\uFE0F Edit Expense' : '\u{2795} New Expense'}
+          </Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>✕</Text>
+            <Text style={styles.closeText}>{'\u2715'}</Text>
           </TouchableOpacity>
         </View>
 
         <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
-          {/* Name */}
-          <Text style={styles.label}>EXPENSE NAME</Text>
+          <Text style={styles.label}>{'\u{1F4DD}'} EXPENSE NAME</Text>
           <TextInput
             style={styles.input}
             value={form.name}
             onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
             placeholder="e.g. Grocery shopping"
-            placeholderTextColor="#556677"
+            placeholderTextColor="#a8bfa0"
             autoFocus={!expense}
           />
 
-          {/* Date + Amount row */}
           <View style={styles.row}>
             <View style={styles.halfField}>
-              <Text style={styles.label}>DAY</Text>
+              <Text style={styles.label}>{'\u{1F4C5}'} DAY</Text>
               <TextInput
                 style={styles.input}
                 value={form.date}
                 onChangeText={(v) => setForm((f) => ({ ...f, date: v }))}
                 placeholder="1-31"
-                placeholderTextColor="#556677"
+                placeholderTextColor="#a8bfa0"
                 keyboardType="number-pad"
                 maxLength={2}
               />
             </View>
             <View style={styles.halfField}>
-              <Text style={styles.label}>AMOUNT (€)</Text>
+              <Text style={styles.label}>{'\u{1F4B0}'} AMOUNT ({'\u20AC'})</Text>
               <TextInput
                 style={styles.input}
                 value={form.amount}
                 onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
                 placeholder="0.00"
-                placeholderTextColor="#556677"
+                placeholderTextColor="#a8bfa0"
                 keyboardType="decimal-pad"
               />
             </View>
           </View>
 
-          {/* Category */}
-          <Text style={styles.label}>CATEGORY</Text>
+          <Text style={styles.label}>{'\u{1F3F7}\uFE0F'} CATEGORY</Text>
           <TouchableOpacity
             style={styles.picker}
-            onPress={() => {
-              setShowPrimaryPicker((v) => !v);
-              setShowSecondaryPicker(false);
-            }}
+            onPress={() => setPrimarySheetVisible(true)}
           >
             <Text style={form.primary ? styles.pickerText : styles.pickerPlaceholder}>
               {form.primary || 'Select...'}
             </Text>
-            <Text style={styles.pickerArrow}>▼</Text>
+            <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
           </TouchableOpacity>
-          {showPrimaryPicker && (
-            <View style={styles.optionsList}>
-              {categoryNames.map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[styles.option, form.primary === cat && styles.optionActive]}
-                  onPress={() => selectPrimary(cat)}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      form.primary === cat && styles.optionTextActive,
-                    ]}
-                  >
-                    {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
 
-          {/* Subcategory */}
-          <Text style={styles.label}>SUBCATEGORY</Text>
+          <Text style={styles.label}>{'\u{1F4CC}'} SUBCATEGORY</Text>
           <TouchableOpacity
             style={[styles.picker, !form.primary && styles.pickerDisabled]}
             onPress={() => {
-              if (form.primary) {
-                setShowSecondaryPicker((v) => !v);
-                setShowPrimaryPicker(false);
-              }
+              if (form.primary) setSecondarySheetVisible(true);
             }}
             disabled={!form.primary}
           >
             <Text style={form.secondary ? styles.pickerText : styles.pickerPlaceholder}>
               {form.secondary || (form.primary ? 'Select...' : 'Select category first...')}
             </Text>
-            <Text style={styles.pickerArrow}>▼</Text>
+            <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
           </TouchableOpacity>
-          {showSecondaryPicker && subcategories.length > 0 && (
-            <View style={styles.optionsList}>
-              {subcategories.map((sub) => (
-                <TouchableOpacity
-                  key={sub}
-                  style={[styles.option, form.secondary === sub && styles.optionActive]}
-                  onPress={() => selectSecondary(sub)}
-                >
-                  <Text
-                    style={[
-                      styles.optionText,
-                      form.secondary === sub && styles.optionTextActive,
-                    ]}
-                  >
-                    {sub}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
 
           <View style={{ height: 40 }} />
         </ScrollView>
 
-        {/* Actions */}
         <View style={styles.actions}>
           <Button variant="ghost" onPress={onClose}>Cancel</Button>
           <Button
@@ -230,9 +181,26 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
             onPress={handleSave}
             disabled={!isValid}
           >
-            Save Expense
+            {'\u{1F4BE}'} Save Expense
           </Button>
         </View>
+
+        <PickerSheet
+          title="Select Category"
+          options={categoryNames}
+          selected={form.primary}
+          onSelect={selectPrimary}
+          onDismiss={() => setPrimarySheetVisible(false)}
+          visible={primarySheetVisible}
+        />
+        <PickerSheet
+          title="Select Subcategory"
+          options={subcategories}
+          selected={form.secondary}
+          onSelect={selectSecondary}
+          onDismiss={() => setSecondarySheetVisible(false)}
+          visible={secondarySheetVisible}
+        />
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -241,7 +209,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: t.colors.bgSurface,
+    backgroundColor: t.colors.bgBase,
   },
   header: {
     flexDirection: 'row',
@@ -250,21 +218,24 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.lg,
     paddingTop: t.spacing.xl + 20,
     paddingBottom: t.spacing.md,
-    borderBottomWidth: 1,
+    borderBottomWidth: 1.5,
     borderBottomColor: t.colors.border,
+    backgroundColor: t.colors.bgSurface,
   },
   title: {
     fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.xl,
+    fontSize: t.fontSize.xl + 2,
     color: t.colors.textPrimary,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: t.radius.sm,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: t.colors.bgInteractive,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: t.colors.border,
   },
   closeText: {
     fontSize: 18,
@@ -276,21 +247,21 @@ const useStyles = makeStyles((t) => ({
     paddingTop: t.spacing.lg,
   },
   label: {
-    fontFamily: t.fonts.monoSemiBold,
-    fontSize: t.fontSize.xs,
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.xs + 1,
     color: t.colors.textMuted,
     letterSpacing: 0.5,
     marginBottom: t.spacing.sm,
     marginTop: t.spacing.md,
   },
   input: {
-    backgroundColor: t.colors.bgElevated,
-    borderWidth: 1,
+    backgroundColor: t.colors.bgSurface,
+    borderWidth: 1.5,
     borderColor: t.colors.border,
-    borderRadius: t.radius.sm,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    fontFamily: t.fonts.sans,
+    borderRadius: t.radius.md,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    fontFamily: t.fonts.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
   },
@@ -305,23 +276,23 @@ const useStyles = makeStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: t.colors.bgElevated,
-    borderWidth: 1,
+    backgroundColor: t.colors.bgSurface,
+    borderWidth: 1.5,
     borderColor: t.colors.border,
-    borderRadius: t.radius.sm,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
+    borderRadius: t.radius.md,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
   },
   pickerDisabled: {
     opacity: 0.5,
   },
   pickerText: {
-    fontFamily: t.fonts.sans,
+    fontFamily: t.fonts.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
   },
   pickerPlaceholder: {
-    fontFamily: t.fonts.sans,
+    fontFamily: t.fonts.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textMuted,
   },
@@ -329,40 +300,15 @@ const useStyles = makeStyles((t) => ({
     fontSize: 10,
     color: t.colors.accent,
   },
-  optionsList: {
-    backgroundColor: t.colors.bgElevated,
-    borderWidth: 1,
-    borderColor: t.colors.border,
-    borderRadius: t.radius.sm,
-    marginTop: t.spacing.xs,
-    maxHeight: 200,
-  },
-  option: {
-    paddingVertical: t.spacing.sm + 2,
-    paddingHorizontal: t.spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: t.colors.border,
-  },
-  optionActive: {
-    backgroundColor: t.colors.accentMuted,
-  },
-  optionText: {
-    fontFamily: t.fonts.sans,
-    fontSize: t.fontSize.md,
-    color: t.colors.textPrimary,
-  },
-  optionTextActive: {
-    color: t.colors.accent,
-    fontFamily: t.fonts.sansSemiBold,
-  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: t.spacing.sm,
     paddingHorizontal: t.spacing.lg,
     paddingVertical: t.spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: 1.5,
     borderTopColor: t.colors.border,
     paddingBottom: t.spacing.xl,
+    backgroundColor: t.colors.bgSurface,
   },
 }));

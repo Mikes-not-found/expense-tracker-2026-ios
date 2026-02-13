@@ -1,6 +1,5 @@
 /**
- * SpendingRow — bar chart row for dashboard sections.
- * Shows name, animated progress bar, value, and percentage.
+ * SpendingRow — kawaii bar chart row with pink progress bar.
  */
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated } from 'react-native';
@@ -11,9 +10,10 @@ interface SpendingRowProps {
   name: string;
   amount: number;
   total: number;
+  emoji?: string;
 }
 
-export const SpendingRow: React.FC<SpendingRowProps> = ({ name, amount, total }) => {
+export const SpendingRow: React.FC<SpendingRowProps> = ({ name, amount, total, emoji }) => {
   const styles = useStyles();
   const widthAnim = useRef(new Animated.Value(0)).current;
   const pct = calcPct(amount, total);
@@ -22,14 +22,16 @@ export const SpendingRow: React.FC<SpendingRowProps> = ({ name, amount, total })
   useEffect(() => {
     Animated.timing(widthAnim, {
       toValue: pctNum,
-      duration: 600,
+      duration: 800,
       useNativeDriver: false,
     }).start();
   }, [pctNum]);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.name} numberOfLines={1}>{name}</Text>
+      <Text style={styles.name} numberOfLines={1}>
+        {emoji ? `${emoji} ${name}` : name}
+      </Text>
       <View style={styles.barContainer}>
         <Animated.View
           style={[
@@ -54,11 +56,11 @@ const useStyles = makeStyles((t) => ({
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.sm + 4,
-    paddingVertical: t.spacing.sm,
+    paddingVertical: t.spacing.sm + 2,
     paddingHorizontal: t.spacing.sm,
   },
   name: {
-    fontFamily: t.fonts.sansMedium,
+    fontFamily: t.fonts.monoMedium,
     fontSize: t.fontSize.md,
     color: t.colors.textPrimary,
     minWidth: 80,
@@ -66,7 +68,7 @@ const useStyles = makeStyles((t) => ({
   },
   barContainer: {
     flex: 1,
-    height: 8,
+    height: 10,
     backgroundColor: t.colors.bgInteractive,
     borderRadius: t.radius.full,
     overflow: 'hidden',
@@ -78,9 +80,9 @@ const useStyles = makeStyles((t) => ({
     minWidth: 2,
   },
   value: {
-    fontFamily: t.fonts.monoSemiBold,
+    fontFamily: t.fonts.monoBold,
     fontSize: t.fontSize.sm,
-    color: t.colors.textSecondary,
+    color: t.colors.accent,
     minWidth: 75,
     textAlign: 'right',
     flexShrink: 0,

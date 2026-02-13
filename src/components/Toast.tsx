@@ -1,6 +1,5 @@
 /**
- * Toast — notification system with animated entries.
- * Matches PWA's toast behavior (auto-dismiss after 3.2s).
+ * Toast — kawaii notification with pink-themed styling.
  */
 import React, { useEffect, useRef } from 'react';
 import { View, Text, Animated } from 'react-native';
@@ -17,17 +16,19 @@ const SingleToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
   const { theme } = useTheme();
   const translateY = useRef(new Animated.Value(20)).current;
   const opacity = useRef(new Animated.Value(0)).current;
+  const scale = useRef(new Animated.Value(0.9)).current;
 
   const toastColors: Record<string, { bg: string; text: string }> = {
-    success: { bg: theme.colors.green, text: theme.colors.bgBase },
+    success: { bg: theme.colors.green, text: '#ffffff' },
     error: { bg: theme.colors.red, text: '#ffffff' },
-    info: { bg: theme.colors.accent, text: theme.colors.bgBase },
+    info: { bg: theme.colors.accent, text: '#ffffff' },
   };
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(translateY, { toValue: 0, duration: 300, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 350, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 350, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
     ]).start();
 
     const fadeTimer = setTimeout(() => {
@@ -46,7 +47,7 @@ const SingleToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
     <Animated.View
       style={[
         styles.toast,
-        { backgroundColor: colors.bg, transform: [{ translateY }], opacity },
+        { backgroundColor: colors.bg, transform: [{ translateY }, { scale }], opacity },
       ]}
     >
       <Text style={[styles.toastText, { color: colors.text }]}>{toast.message}</Text>
@@ -80,15 +81,15 @@ const useStyles = makeStyles((t) => ({
   toast: {
     paddingVertical: t.spacing.md,
     paddingHorizontal: t.spacing.lg,
-    borderRadius: t.radius.md,
+    borderRadius: t.radius.full,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 5,
   },
   toastText: {
-    fontFamily: t.fonts.monoMedium,
+    fontFamily: t.fonts.monoBold,
     fontSize: t.fontSize.sm + 1,
   },
 }));

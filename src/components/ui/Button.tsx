@@ -1,6 +1,5 @@
 /**
- * Button — reusable button with variants.
- * Open/Closed Principle: add new variants without modifying existing code.
+ * Button — kawaii button with rounded pill shapes and pastel colors.
  */
 import React, { type ReactNode } from 'react';
 import { TouchableOpacity, Text, type ViewStyle } from 'react-native';
@@ -34,7 +33,7 @@ export const Button: React.FC<ButtonProps> = ({
   const variantStyles: Record<ButtonVariant, { bg: string; text: string; border: string }> = {
     primary: {
       bg: theme.colors.accent,
-      text: theme.colors.bgBase,
+      text: '#ffffff',
       border: theme.colors.accent,
     },
     success: {
@@ -91,16 +90,16 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'center',
     gap: t.spacing.sm,
     paddingVertical: t.spacing.sm + 2,
-    paddingHorizontal: t.spacing.md,
-    borderWidth: 1,
-    borderRadius: t.radius.sm,
+    paddingHorizontal: t.spacing.lg,
+    borderWidth: 1.5,
+    borderRadius: t.radius.full,
   },
   small: {
-    paddingVertical: t.spacing.xs + 2,
-    paddingHorizontal: t.spacing.sm + 4,
+    paddingVertical: t.spacing.xs + 3,
+    paddingHorizontal: t.spacing.md,
   },
   text: {
-    fontFamily: t.fonts.monoSemiBold,
+    fontFamily: t.fonts.monoBold,
     fontSize: t.fontSize.sm + 1,
   },
   textSmall: {

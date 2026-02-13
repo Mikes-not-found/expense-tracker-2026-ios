@@ -1,6 +1,5 @@
 /**
- * ExpenseRow — single expense entry in month view.
- * Supports edit and delete actions via callbacks.
+ * ExpenseRow — kawaii expense entry with pastel styling and emoji badges.
  */
 import React from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
@@ -37,7 +36,7 @@ export const ExpenseRow: React.FC<ExpenseRowProps> = ({
           <Text style={styles.date}>{dateStr}</Text>
           <Text style={styles.name} numberOfLines={1}>{expense.name}</Text>
         </View>
-        <Text style={styles.amount}>€ {expense.amount.toFixed(2)}</Text>
+        <Text style={styles.amount}>{'\u20AC'} {expense.amount.toFixed(2)}</Text>
       </View>
 
       <View style={styles.detailRow}>
@@ -52,14 +51,14 @@ export const ExpenseRow: React.FC<ExpenseRowProps> = ({
             onPress={() => onEdit(index)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.editIcon}>✎</Text>
+            <Text style={styles.editIcon}>{'\u270E'}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.deleteBtn]}
             onPress={() => onDelete(index)}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <Text style={styles.deleteIcon}>✕</Text>
+            <Text style={styles.deleteIcon}>{'\u2715'}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -73,6 +72,7 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: t.colors.border,
+    backgroundColor: t.colors.bgSurface,
   },
   mainRow: {
     flexDirection: 'row',
@@ -91,13 +91,13 @@ const useStyles = makeStyles((t) => ({
     marginBottom: 2,
   },
   name: {
-    fontFamily: t.fonts.sansSemiBold,
-    fontSize: t.fontSize.md,
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
   },
   amount: {
     fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.lg,
+    fontSize: t.fontSize.lg + 2,
     color: t.colors.accent,
   },
   detailRow: {
@@ -116,15 +116,18 @@ const useStyles = makeStyles((t) => ({
     marginLeft: 'auto',
   },
   actionBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: t.radius.sm,
+    width: 34,
+    height: 34,
+    borderRadius: t.radius.md,
     backgroundColor: t.colors.bgInteractive,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: t.colors.border,
   },
   deleteBtn: {
     backgroundColor: t.colors.redMuted,
+    borderColor: 'transparent',
   },
   editIcon: {
     fontSize: 14,

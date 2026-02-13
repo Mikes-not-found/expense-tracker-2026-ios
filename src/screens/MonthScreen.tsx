@@ -1,17 +1,17 @@
 /**
- * MonthScreen — monthly expense view with list, summary, and FAB.
- * Mirrors the PWA's renderMonth() function.
+ * MonthScreen — kawaii monthly expense view with swipe navigation.
+ * FloatingEmojis background, pink FAB, pastel styling.
  */
-import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback, useRef } from 'react';
+import { View, TouchableOpacity, Text, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import PagerView from 'react-native-pager-view';
 
 import { MonthTabs } from '../components/MonthTabs';
-import { ExpenseRow } from '../components/ExpenseRow';
+import { MonthContent } from '../components/MonthContent';
 import { ExpenseModal } from '../components/ExpenseModal';
 import { SummaryModal } from '../components/SummaryModal';
-import { Button } from '../components/ui/Button';
-import { EmptyState } from '../components/ui/EmptyState';
+import { FloatingEmojis } from '../components/FloatingEmojis';
 import { ToastContainer } from '../components/Toast';
 
 import { useExpenses, useSummary } from '../store/hooks';
@@ -19,19 +19,18 @@ import { useToast } from '../hooks/useToast';
 import { useHaptics } from '../hooks/useHaptics';
 
 import { months, monthNames, type MonthKey } from '../constants/categories';
-import { formatEuro } from '../utils/calculations';
 import { makeStyles } from '../utils/styles';
 import type { Expense } from '../types';
 
 export const MonthScreen: React.FC = () => {
   const styles = useStyles();
+  const pagerRef = useRef<PagerView>(null);
 
-  const [activeMonth, setActiveMonth] = useState<MonthKey>(() => {
-    const now = new Date();
-    return months[now.getMonth()];
-  });
+  const initialIndex = new Date().getMonth();
+  const [activeMonthIndex, setActiveMonthIndex] = useState(initialIndex);
+  const activeMonth = months[activeMonthIndex];
 
-  const { expenses, total, addExpense, editExpense, deleteExpense } = useExpenses(activeMonth);
+  const { expenses, addExpense, editExpense, deleteExpense } = useExpenses(activeMonth);
   const { summary, saveSummary } = useSummary(activeMonth);
   const { toasts, showToast } = useToast();
   const haptics = useHaptics();
@@ -42,6 +41,24 @@ export const MonthScreen: React.FC = () => {
     expense: Expense;
     index: number;
   } | null>(null);
+
+  const handleTabSelect = useCallback(
+    (month: MonthKey) => {
+      const idx = months.indexOf(month);
+      if (idx >= 0) {
+        setActiveMonthIndex(idx);
+        pagerRef.current?.setPage(idx);
+      }
+    },
+    []
+  );
+
+  const handlePageSelected = useCallback(
+    (e: { nativeEvent: { position: number } }) => {
+      setActiveMonthIndex(e.nativeEvent.position);
+    },
+    []
+  );
 
   const handleAddExpense = useCallback(() => {
     setEditingExpense(null);
@@ -100,83 +117,38 @@ export const MonthScreen: React.FC = () => {
     [saveSummary, haptics, showToast]
   );
 
-  const renderExpenseItem = useCallback(
-    ({ item, index }: { item: Expense; index: number }) => (
-      <ExpenseRow
-        expense={item}
-        index={index}
-        month={activeMonth}
-        onEdit={handleEditExpense}
-        onDelete={handleDeleteExpense}
-      />
-    ),
-    [activeMonth, handleEditExpense, handleDeleteExpense]
-  );
+  const handleOpenSummary = useCallback(() => {
+    setSummaryModalVisible(true);
+  }, []);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
+      <FloatingEmojis />
+
       {/* Month tabs */}
-      <MonthTabs activeMonth={activeMonth} onSelect={setActiveMonth} />
+      <MonthTabs activeMonth={activeMonth} onSelect={handleTabSelect} />
 
-      {/* Month header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.monthTitle}>
-            {monthNames[activeMonth]}{' '}
-            <Text style={styles.yearText}>2026</Text>
-          </Text>
-        </View>
-        <View style={styles.totalBadge}>
-          <Text style={styles.totalText}>{formatEuro(total)}</Text>
-        </View>
-      </View>
-
-      {/* Actions */}
-      <View style={styles.actionBar}>
-        <Button variant="primary" onPress={handleAddExpense} small>
-          + Add Expense
-        </Button>
-        <Button
-          variant="ghost"
-          onPress={() => setSummaryModalVisible(true)}
-          small
-        >
-          Monthly Summary
-        </Button>
-      </View>
-
-      {/* Summary preview */}
-      <TouchableOpacity
-        style={styles.summaryPreview}
-        onPress={() => setSummaryModalVisible(true)}
-        activeOpacity={0.7}
+      {/* Swipeable month pages */}
+      <PagerView
+        ref={pagerRef}
+        style={styles.pager}
+        initialPage={initialIndex}
+        onPageSelected={handlePageSelected}
       >
-        <Text style={styles.summaryLabel}>MONTHLY SUMMARY</Text>
-        <Text
-          style={[styles.summaryText, !summary && styles.summaryEmpty]}
-          numberOfLines={2}
-        >
-          {summary || 'Click to write your monthly summary, reflections, and goals...'}
-        </Text>
-      </TouchableOpacity>
+        {months.map((m) => (
+          <View key={m} style={styles.page}>
+            <MonthContent
+              month={m}
+              onAddExpense={handleAddExpense}
+              onEditExpense={handleEditExpense}
+              onDeleteExpense={handleDeleteExpense}
+              onOpenSummary={handleOpenSummary}
+            />
+          </View>
+        ))}
+      </PagerView>
 
-      {/* Expenses list */}
-      {expenses.length === 0 ? (
-        <EmptyState
-          title="No expenses recorded"
-          subtitle='Tap "+ Add Expense" to start tracking this month'
-        />
-      ) : (
-        <FlatList
-          data={expenses}
-          renderItem={renderExpenseItem}
-          keyExtractor={(_, i) => String(i)}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-        />
-      )}
-
-      {/* FAB */}
+      {/* FAB — kawaii pink circle */}
       <TouchableOpacity
         style={styles.fab}
         onPress={handleAddExpense}
@@ -214,92 +186,36 @@ const useStyles = makeStyles((t) => ({
     flex: 1,
     backgroundColor: t.colors.bgBase,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: t.spacing.md,
-    paddingTop: t.spacing.lg,
-    paddingBottom: t.spacing.sm,
+  pager: {
+    flex: 1,
+    zIndex: 1,
   },
-  monthTitle: {
-    fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.xl + 4,
-    color: t.colors.textPrimary,
-  },
-  yearText: {
-    fontFamily: t.fonts.mono,
-    fontWeight: '300',
-    color: t.colors.textMuted,
-  },
-  totalBadge: {
-    paddingVertical: t.spacing.sm,
-    paddingHorizontal: t.spacing.lg,
-    backgroundColor: t.colors.accentMuted,
-    borderRadius: t.radius.full,
-  },
-  totalText: {
-    fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.lg,
-    color: t.colors.accent,
-  },
-  actionBar: {
-    flexDirection: 'row',
-    gap: t.spacing.sm,
-    paddingHorizontal: t.spacing.md,
-    paddingVertical: t.spacing.sm,
-  },
-  summaryPreview: {
-    marginHorizontal: t.spacing.md,
-    marginBottom: t.spacing.md,
-    backgroundColor: t.colors.bgSurface,
-    borderWidth: 1,
-    borderColor: t.colors.border,
-    borderLeftWidth: 3,
-    borderLeftColor: t.colors.purple,
-    borderRadius: t.radius.md,
-    padding: t.spacing.md,
-  },
-  summaryLabel: {
-    fontFamily: t.fonts.monoSemiBold,
-    fontSize: t.fontSize.xs,
-    color: t.colors.purple,
-    letterSpacing: 1,
-    marginBottom: t.spacing.xs,
-  },
-  summaryText: {
-    fontFamily: t.fonts.sans,
-    fontSize: t.fontSize.md,
-    color: t.colors.textSecondary,
-    lineHeight: 22,
-  },
-  summaryEmpty: {
-    fontStyle: 'italic',
-    color: t.colors.textMuted,
-  },
-  listContent: {
-    paddingBottom: 100,
+  page: {
+    flex: 1,
   },
   fab: {
     position: 'absolute',
     bottom: t.spacing.xl,
     right: t.spacing.xl,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: t.colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: t.colors.accent,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowRadius: 16,
     elevation: 8,
+    zIndex: 10,
+    borderWidth: 2,
+    borderColor: '#ffffff',
   },
   fabText: {
-    fontSize: 28,
-    color: t.colors.bgBase,
-    fontWeight: '600',
+    fontSize: 30,
+    color: '#ffffff',
+    fontWeight: '700',
     marginTop: -2,
   },
 }));

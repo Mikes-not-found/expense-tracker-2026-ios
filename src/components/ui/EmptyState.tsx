@@ -1,5 +1,5 @@
 /**
- * EmptyState — shown when a list has no items.
+ * EmptyState — kawaii empty state with cute emoji.
  */
 import React from 'react';
 import { View, Text } from 'react-native';
@@ -12,7 +12,7 @@ interface EmptyStateProps {
 }
 
 export const EmptyState: React.FC<EmptyStateProps> = ({
-  icon = '</>',
+  icon = '\u{1F338}',
   title,
   subtitle,
 }) => {
@@ -34,15 +34,13 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.lg,
   },
   icon: {
-    fontSize: 48,
-    opacity: 0.3,
+    fontSize: 56,
     marginBottom: t.spacing.md,
-    color: t.colors.textMuted,
   },
   title: {
-    fontFamily: t.fonts.monoSemiBold,
-    fontSize: t.fontSize.lg,
-    color: t.colors.textSecondary,
+    fontFamily: t.fonts.monoBold,
+    fontSize: t.fontSize.lg + 2,
+    color: t.colors.textPrimary,
     marginBottom: t.spacing.sm,
     textAlign: 'center',
   },
@@ -51,5 +49,6 @@ const useStyles = makeStyles((t) => ({
     fontSize: t.fontSize.md,
     color: t.colors.textMuted,
     textAlign: 'center',
+    lineHeight: 22,
   },
 }));

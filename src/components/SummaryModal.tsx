@@ -1,6 +1,5 @@
 /**
- * SummaryModal — monthly summary editor.
- * TextInput multiline with character counter.
+ * SummaryModal — kawaii Kakeibo-style monthly summary editor.
  */
 import React, { useState, useEffect } from 'react';
 import {
@@ -49,15 +48,15 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.header}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={styles.title}>{'\u{1F33F}'} {title}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Text style={styles.closeText}>✕</Text>
+            <Text style={styles.closeText}>{'\u2715'}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.body}>
           <Text style={styles.hint}>
-            Write your monthly summary, reflections, and goals. This will be saved and exported with your Excel data.
+            {'\u{1F375}'} Write your Kakeibo reflection — what did you spend on? What are you grateful for? What are your savings goals?
           </Text>
           <TextInput
             style={styles.textarea}
@@ -65,16 +64,16 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
             onChangeText={setText}
             multiline
             textAlignVertical="top"
-            placeholder="What happened this month? What did you spend on? Any reflections or goals for next month..."
-            placeholderTextColor="#556677"
+            placeholder="This month I spent on... I'm grateful for... Next month I want to..."
+            placeholderTextColor="#a8bfa0"
           />
         </View>
 
         <View style={styles.footer}>
-          <Text style={styles.charCount}>{text.length} characters</Text>
+          <Text style={styles.charCount}>{'\u{1F4DD}'} {text.length} characters</Text>
           <View style={styles.actions}>
             <Button variant="ghost" onPress={onClose}>Cancel</Button>
-            <Button variant="primary" onPress={() => onSave(text)}>Save Summary</Button>
+            <Button variant="primary" onPress={() => onSave(text)}>{'\u{1F4BE}'} Save</Button>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -85,7 +84,7 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
 const useStyles = makeStyles((t) => ({
   root: {
     flex: 1,
-    backgroundColor: t.colors.bgSurface,
+    backgroundColor: t.colors.bgBase,
   },
   header: {
     flexDirection: 'row',
@@ -94,21 +93,24 @@ const useStyles = makeStyles((t) => ({
     paddingHorizontal: t.spacing.lg,
     paddingTop: t.spacing.xl + 20,
     paddingBottom: t.spacing.md,
-    borderBottomWidth: 1,
+    borderBottomWidth: 1.5,
     borderBottomColor: t.colors.border,
+    backgroundColor: t.colors.bgSurface,
   },
   title: {
     fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.xl,
-    color: t.colors.textPrimary,
+    fontSize: t.fontSize.xl + 2,
+    color: t.colors.green,
   },
   closeBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: t.radius.sm,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: t.colors.bgInteractive,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: t.colors.border,
   },
   closeText: {
     fontSize: 18,
@@ -120,7 +122,7 @@ const useStyles = makeStyles((t) => ({
     paddingTop: t.spacing.lg,
   },
   hint: {
-    fontFamily: t.fonts.sans,
+    fontFamily: t.fonts.monoMedium,
     fontSize: t.fontSize.md,
     color: t.colors.textSecondary,
     lineHeight: 22,
@@ -128,8 +130,8 @@ const useStyles = makeStyles((t) => ({
   },
   textarea: {
     flex: 1,
-    backgroundColor: t.colors.bgElevated,
-    borderWidth: 1,
+    backgroundColor: t.colors.bgSurface,
+    borderWidth: 1.5,
     borderColor: t.colors.border,
     borderRadius: t.radius.md,
     padding: t.spacing.md,
@@ -145,9 +147,10 @@ const useStyles = makeStyles((t) => ({
     justifyContent: 'space-between',
     paddingHorizontal: t.spacing.lg,
     paddingVertical: t.spacing.md,
-    borderTopWidth: 1,
+    borderTopWidth: 1.5,
     borderTopColor: t.colors.border,
     paddingBottom: t.spacing.xl,
+    backgroundColor: t.colors.bgSurface,
   },
   charCount: {
     fontFamily: t.fonts.mono,
