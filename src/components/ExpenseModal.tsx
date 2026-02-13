@@ -31,7 +31,8 @@ interface ExpenseModalProps {
 }
 
 const emptyForm = { name: '', date: '', amount: '', primary: '', secondary: '' };
-const INPUT_ACCESSORY_ID = 'expense-modal-done';
+const DAY_ACCESSORY_ID = 'expense-day-done';
+const AMOUNT_ACCESSORY_ID = 'expense-amount-done';
 
 export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   visible,
@@ -149,7 +150,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   placeholderTextColor="#a8bfa0"
                   keyboardType="number-pad"
                   maxLength={2}
-                  inputAccessoryViewID={Platform.OS === 'ios' ? INPUT_ACCESSORY_ID : undefined}
+                  inputAccessoryViewID={Platform.OS === 'ios' ? DAY_ACCESSORY_ID : undefined}
                 />
               </View>
               <View style={styles.halfField}>
@@ -161,7 +162,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                   placeholder="0.00"
                   placeholderTextColor="#a8bfa0"
                   keyboardType="decimal-pad"
-                  inputAccessoryViewID={Platform.OS === 'ios' ? INPUT_ACCESSORY_ID : undefined}
+                  inputAccessoryViewID={Platform.OS === 'ios' ? AMOUNT_ACCESSORY_ID : undefined}
                 />
               </View>
             </View>
@@ -230,9 +231,18 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
         </View>
       </TouchableWithoutFeedback>
 
-      {/* iOS Done button — MUST be outside TouchableWithoutFeedback to receive nativeID */}
+      {/* iOS Done buttons — separate nativeID per keyboard type to avoid iOS conflicts */}
       {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={INPUT_ACCESSORY_ID}>
+        <InputAccessoryView nativeID={DAY_ACCESSORY_ID}>
+          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
+            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
+              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={AMOUNT_ACCESSORY_ID}>
           <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
             <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
               <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
