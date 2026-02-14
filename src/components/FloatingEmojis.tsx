@@ -25,8 +25,8 @@ export const FloatingEmojis: React.FC = () => {
       emoji,
       left: `${Math.random() * 95}%`,
       size: 14 + Math.random() * 14,
-      duration: 25 + Math.random() * 25,
-      delay: 5 + Math.random() * 20,
+      duration: 20 + Math.random() * 20,
+      delay: Math.random() * 15,
     })),
     []
   );
@@ -39,8 +39,9 @@ export const FloatingEmojis: React.FC = () => {
           style={{
             position: 'absolute',
             left: config.left,
-            bottom: '-40px',
+            top: 0,
             fontSize: config.size,
+            opacity: 0,
             animation: `floatUp ${config.duration}s ${config.delay}s linear infinite`,
             pointerEvents: 'none',
           }}

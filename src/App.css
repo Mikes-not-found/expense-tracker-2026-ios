@@ -78,17 +78,17 @@ input, textarea, select {
 /* Floating emojis animation */
 @keyframes floatUp {
   0% {
-    transform: translateY(100vh) rotate(-15deg);
+    transform: translateY(calc(100vh + 40px)) rotate(-15deg);
     opacity: 0;
   }
-  10% {
+  5% {
     opacity: 0.45;
   }
-  75% {
+  85% {
     opacity: 0.45;
   }
   100% {
-    transform: translateY(-80px) rotate(15deg);
+    transform: translateY(-40px) rotate(15deg);
     opacity: 0;
   }
 }
