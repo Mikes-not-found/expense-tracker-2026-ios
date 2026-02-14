@@ -1,8 +1,7 @@
 /**
  * SpendingRow — kawaii bar chart row with pink progress bar.
  */
-import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated } from 'react-native';
+import React from 'react';
 import { makeStyles } from '../utils/styles';
 import { formatEuro, calcPct } from '../utils/calculations';
 
@@ -15,56 +14,50 @@ interface SpendingRowProps {
 
 export const SpendingRow: React.FC<SpendingRowProps> = ({ name, amount, total, emoji }) => {
   const styles = useStyles();
-  const widthAnim = useRef(new Animated.Value(0)).current;
   const pct = calcPct(amount, total);
   const pctNum = parseFloat(pct);
 
-  useEffect(() => {
-    Animated.timing(widthAnim, {
-      toValue: pctNum,
-      duration: 800,
-      useNativeDriver: false,
-    }).start();
-  }, [pctNum]);
-
   return (
-    <View style={styles.container}>
-      <Text style={styles.name} numberOfLines={1}>
+    <div style={styles.container}>
+      <span style={styles.name}>
         {emoji ? `${emoji} ${name}` : name}
-      </Text>
-      <View style={styles.barContainer}>
-        <Animated.View
-          style={[
-            styles.barFill,
-            {
-              width: widthAnim.interpolate({
-                inputRange: [0, 100],
-                outputRange: ['0%', '100%'],
-              }),
-            },
-          ]}
+      </span>
+      <div style={styles.barContainer}>
+        <div
+          style={{
+            ...styles.barFill,
+            width: `${pctNum}%`,
+            animation: 'barGrow 0.8s ease-out',
+          }}
         />
-      </View>
-      <Text style={styles.value}>{formatEuro(amount)}</Text>
-      <Text style={styles.pct}>{pct}%</Text>
-    </View>
+      </div>
+      <span style={styles.value}>{formatEuro(amount)}</span>
+      <span style={styles.pct}>{pct}%</span>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   container: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.sm + 4,
-    paddingVertical: t.spacing.sm + 2,
-    paddingHorizontal: t.spacing.sm,
+    paddingTop: t.spacing.sm + 2,
+    paddingBottom: t.spacing.sm + 2,
+    paddingLeft: t.spacing.sm,
+    paddingRight: t.spacing.sm,
   },
   name: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md,
     color: t.colors.textPrimary,
     minWidth: 80,
     flexShrink: 0,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
   barContainer: {
     flex: 1,
@@ -78,21 +71,24 @@ const useStyles = makeStyles((t) => ({
     borderRadius: t.radius.full,
     backgroundColor: t.colors.accent,
     minWidth: 2,
+    transition: 'width 0.8s ease-out',
   },
   value: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.sm,
     color: t.colors.accent,
     minWidth: 75,
-    textAlign: 'right',
+    textAlign: 'right' as const,
     flexShrink: 0,
   },
   pct: {
     fontFamily: t.fonts.mono,
+    fontWeight: t.fontWeights.mono,
     fontSize: t.fontSize.xs + 1,
     color: t.colors.textMuted,
     minWidth: 38,
-    textAlign: 'right',
+    textAlign: 'right' as const,
     flexShrink: 0,
   },
 }));

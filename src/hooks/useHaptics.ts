@@ -1,38 +1,20 @@
 /**
- * Haptic feedback hook — provides native iOS haptic responses.
- * DRY: centralizes all haptic interactions.
- * Safely no-ops on platforms that don't support haptics.
+ * Haptic feedback hook — web version.
+ * Uses navigator.vibrate() where available, otherwise no-op.
  */
 import { useCallback } from 'react';
-import * as Haptics from 'expo-haptics';
-import { Platform } from 'react-native';
 
-const isIOS = Platform.OS === 'ios';
+const vibrate = (ms: number) => {
+  if (navigator.vibrate) navigator.vibrate(ms);
+};
 
 export const useHaptics = () => {
-  const light = useCallback(() => {
-    if (isIOS) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  }, []);
-
-  const medium = useCallback(() => {
-    if (isIOS) Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  }, []);
-
-  const success = useCallback(() => {
-    if (isIOS) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, []);
-
-  const warning = useCallback(() => {
-    if (isIOS) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-  }, []);
-
-  const error = useCallback(() => {
-    if (isIOS) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-  }, []);
-
-  const selection = useCallback(() => {
-    if (isIOS) Haptics.selectionAsync();
-  }, []);
+  const light = useCallback(() => vibrate(10), []);
+  const medium = useCallback(() => vibrate(20), []);
+  const success = useCallback(() => vibrate(30), []);
+  const warning = useCallback(() => vibrate(40), []);
+  const error = useCallback(() => vibrate(50), []);
+  const selection = useCallback(() => vibrate(5), []);
 
   return { light, medium, success, warning, error, selection };
 };

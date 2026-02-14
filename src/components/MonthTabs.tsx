@@ -2,7 +2,6 @@
  * MonthTabs — kawaii horizontal month selector with emoji and pink active tab.
  */
 import React, { useRef, useEffect } from 'react';
-import { ScrollView, TouchableOpacity, Text, View } from 'react-native';
 import { months, monthShortNames, monthEmojis, type MonthKey } from '../constants/categories';
 import { makeStyles } from '../utils/styles';
 
@@ -13,41 +12,35 @@ interface MonthTabsProps {
 
 export const MonthTabs: React.FC<MonthTabsProps> = ({ activeMonth, onSelect }) => {
   const styles = useStyles();
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const idx = months.indexOf(activeMonth);
     if (idx >= 0 && scrollRef.current) {
-      scrollRef.current.scrollTo({ x: Math.max(0, idx * 78 - 120), animated: true });
+      scrollRef.current.scrollTo({ left: Math.max(0, idx * 78 - 120), behavior: 'smooth' });
     }
   }, [activeMonth]);
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.scroll}
-      >
+    <div style={styles.container}>
+      <div ref={scrollRef} style={styles.scroll}>
         {months.map((m) => {
           const isActive = m === activeMonth;
           return (
-            <TouchableOpacity
+            <div
               key={m}
-              style={[styles.tab, isActive && styles.tabActive]}
-              onPress={() => onSelect(m)}
-              activeOpacity={0.7}
+              style={{ ...styles.tab, ...(isActive ? styles.tabActive : {}) }}
+              onClick={() => onSelect(m)}
             >
-              <Text style={styles.tabEmoji}>{monthEmojis[m]}</Text>
-              <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
+              <span style={styles.tabEmoji}>{monthEmojis[m]}</span>
+              <span style={{ ...styles.tabText, ...(isActive ? styles.tabTextActive : {}) }}>
                 {monthShortNames[m]}
-              </Text>
-            </TouchableOpacity>
+              </span>
+            </div>
           );
         })}
-      </ScrollView>
-    </View>
+      </div>
+    </div>
   );
 };
 
@@ -55,21 +48,31 @@ const useStyles = makeStyles((t) => ({
   container: {
     backgroundColor: t.colors.bgSurface,
     borderBottomWidth: 1.5,
+    borderBottomStyle: 'solid',
     borderBottomColor: t.colors.border,
   },
   scroll: {
-    paddingHorizontal: t.spacing.md,
+    display: 'flex',
+    overflowX: 'auto' as const,
+    paddingLeft: t.spacing.md,
+    paddingRight: t.spacing.md,
     gap: t.spacing.xs,
     alignItems: 'center',
     height: 60,
+    scrollbarWidth: 'none' as const,
   },
   tab: {
-    paddingVertical: t.spacing.sm,
-    paddingHorizontal: t.spacing.md + 2,
-    borderRadius: t.radius.full,
+    display: 'flex',
     alignItems: 'center',
-    flexDirection: 'row',
     gap: 4,
+    paddingTop: t.spacing.sm,
+    paddingBottom: t.spacing.sm,
+    paddingLeft: t.spacing.md + 2,
+    paddingRight: t.spacing.md + 2,
+    borderRadius: t.radius.full,
+    cursor: 'pointer',
+    flexShrink: 0,
+    WebkitTapHighlightColor: 'transparent',
   },
   tabActive: {
     backgroundColor: t.colors.accent,
@@ -79,11 +82,13 @@ const useStyles = makeStyles((t) => ({
   },
   tabText: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md,
     color: t.colors.textSecondary,
   },
   tabTextActive: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     color: '#ffffff',
   },
 }));

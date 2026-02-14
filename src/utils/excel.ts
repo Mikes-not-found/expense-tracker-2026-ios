@@ -1,10 +1,7 @@
 /**
- * Excel import/export — mirrors the PWA's logic exactly.
- * Uses expo-document-picker, expo-file-system, expo-sharing + xlsx.
+ * Excel import/export — Web version.
+ * Uses <input type="file"> + FileReader for import, Blob download for export.
  */
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
-import * as Sharing from 'expo-sharing';
 import * as XLSX from 'xlsx';
 
 import { months, monthNames, type MonthKey } from '../constants/categories';
@@ -17,95 +14,113 @@ interface ImportResult {
 }
 
 /**
- * Import Excel file — opens native file picker, parses workbook.
- * Returns parsed expenses, summaries, and raw base64 for re-export.
+ * Import Excel file — opens file picker, parses workbook.
  */
-export const importExcel = async (): Promise<ImportResult | null> => {
-  const result = await DocumentPicker.getDocumentAsync({
-    type: [
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/vnd.ms-excel',
-    ],
-    copyToCacheDirectory: true,
-  });
+export const importExcel = (): Promise<ImportResult | null> => {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.style.display = 'none';
 
-  if (result.canceled || !result.assets?.[0]) return null;
-
-  const fileUri = result.assets[0].uri;
-  const base64 = await FileSystem.readAsStringAsync(fileUri, {
-    encoding: FileSystem.EncodingType.Base64,
-  });
-
-  const workbook = XLSX.read(base64, { type: 'base64', cellFormula: true, cellStyles: true });
-
-  const expenses: Expenses = {};
-
-  for (const month of months) {
-    const sheetNameCap = month.charAt(0).toUpperCase() + month.slice(1);
-    const monthName = monthNames[month];
-    const sheet =
-      workbook.Sheets[sheetNameCap] ??
-      workbook.Sheets[month] ??
-      workbook.Sheets[monthName];
-
-    if (!sheet) continue;
-
-    const jsonData = XLSX.utils.sheet_to_json<(string | number | undefined)[]>(sheet, {
-      header: 1,
-      raw: false,
-    });
-
-    const monthExpenses: Expense[] = [];
-
-    for (let i = 2; i < jsonData.length; i++) {
-      const row = jsonData[i];
-      if (!row?.[0] || String(row[0]).trim() === '') continue;
-
-      const name = String(row[0]);
-      const date = row[1] ? parseInt(String(row[1]), 10) : 1;
-      const amount = row[4]
-        ? parseFloat(String(row[4]))
-        : row[2]
-          ? parseFloat(String(row[2]))
-          : 0;
-      const primary = row[5] ? String(row[5]) : 'OtherExpenses';
-      const secondary = row[6] ? String(row[6]) : '';
-
-      if (amount > 0 && name) {
-        monthExpenses.push({ name, date, amount, primary, secondary });
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) {
+        resolve(null);
+        return;
       }
-    }
 
-    if (monthExpenses.length > 0) {
-      monthExpenses.sort((a, b) => a.date - b.date);
-      expenses[month] = monthExpenses;
-    }
-  }
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const base64 = btoa(
+          new Uint8Array(arrayBuffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+        );
 
-  // Import monthly summaries from "Summaries" sheet if present
-  const summaries: MonthlySummaries = {};
-  const summarySheet = workbook.Sheets['Summaries'] ?? workbook.Sheets['summaries'];
-  if (summarySheet) {
-    const summaryData = XLSX.utils.sheet_to_json<(string | undefined)[]>(summarySheet, {
-      header: 1,
-      raw: false,
-    });
-    for (let i = 1; i < summaryData.length; i++) {
-      const row = summaryData[i];
-      if (row?.[0] && row[1]) {
-        const monthKey = String(row[0]).toLowerCase().substring(0, 3) as MonthKey;
-        if (months.includes(monthKey)) {
-          summaries[monthKey] = String(row[1]);
+        const workbook = XLSX.read(arrayBuffer, { type: 'array', cellFormula: true, cellStyles: true });
+
+        const expenses: Expenses = {};
+
+        for (const month of months) {
+          const sheetNameCap = month.charAt(0).toUpperCase() + month.slice(1);
+          const monthName = monthNames[month];
+          const sheet =
+            workbook.Sheets[sheetNameCap] ??
+            workbook.Sheets[month] ??
+            workbook.Sheets[monthName];
+
+          if (!sheet) continue;
+
+          const jsonData = XLSX.utils.sheet_to_json<(string | number | undefined)[]>(sheet, {
+            header: 1,
+            raw: false,
+          });
+
+          const monthExpenses: Expense[] = [];
+
+          for (let i = 2; i < jsonData.length; i++) {
+            const row = jsonData[i];
+            if (!row?.[0] || String(row[0]).trim() === '') continue;
+
+            const name = String(row[0]);
+            const date = row[1] ? parseInt(String(row[1]), 10) : 1;
+            const amount = row[4]
+              ? parseFloat(String(row[4]))
+              : row[2]
+                ? parseFloat(String(row[2]))
+                : 0;
+            const primary = row[5] ? String(row[5]) : 'OtherExpenses';
+            const secondary = row[6] ? String(row[6]) : '';
+
+            if (amount > 0 && name) {
+              monthExpenses.push({ name, date, amount, primary, secondary });
+            }
+          }
+
+          if (monthExpenses.length > 0) {
+            monthExpenses.sort((a, b) => a.date - b.date);
+            expenses[month] = monthExpenses;
+          }
         }
-      }
-    }
-  }
 
-  return { expenses, summaries, workbookBase64: base64 };
+        // Import monthly summaries from "Summaries" sheet if present
+        const summaries: MonthlySummaries = {};
+        const summarySheet = workbook.Sheets['Summaries'] ?? workbook.Sheets['summaries'];
+        if (summarySheet) {
+          const summaryData = XLSX.utils.sheet_to_json<(string | undefined)[]>(summarySheet, {
+            header: 1,
+            raw: false,
+          });
+          for (let i = 1; i < summaryData.length; i++) {
+            const row = summaryData[i];
+            if (row?.[0] && row[1]) {
+              const monthKey = String(row[0]).toLowerCase().substring(0, 3) as MonthKey;
+              if (months.includes(monthKey)) {
+                summaries[monthKey] = String(row[1]);
+              }
+            }
+          }
+        }
+
+        resolve({ expenses, summaries, workbookBase64: base64 });
+      } catch (err) {
+        reject(err);
+      } finally {
+        input.remove();
+      }
+    };
+
+    input.oncancel = () => {
+      resolve(null);
+      input.remove();
+    };
+
+    document.body.appendChild(input);
+    input.click();
+  });
 };
 
 /**
- * Export/download Excel — creates workbook and opens share sheet.
+ * Export/download Excel — creates workbook and triggers download.
  */
 export const downloadExcel = async (
   expenses: Expenses,
@@ -115,8 +130,15 @@ export const downloadExcel = async (
   let wb: XLSX.WorkBook;
 
   if (originalWorkbookBase64) {
-    wb = XLSX.read(originalWorkbookBase64, {
-      type: 'base64',
+    // Decode base64 to Uint8Array
+    const binary = atob(originalWorkbookBase64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+
+    wb = XLSX.read(bytes, {
+      type: 'array',
       cellFormula: true,
       cellStyles: true,
     });
@@ -181,26 +203,28 @@ export const downloadExcel = async (
     if (idx > -1) wb.SheetNames.splice(idx, 1);
   }
 
-  const summaryData: (string)[][] = [['Month', 'Summary']];
+  const summaryData: string[][] = [['Month', 'Summary']];
   for (const m of months) {
     summaryData.push([monthNames[m], summaries[m] ?? '']);
   }
   const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
   XLSX.utils.book_append_sheet(wb, summaryWs, summarySheetName);
 
-  // Write to file and share
-  const wbOut = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+  // Write and trigger download
+  const wbOut = XLSX.write(wb, { type: 'array', bookType: 'xlsx' });
   const today = new Date().toISOString().split('T')[0];
   const fileName = `2026 - Expences - ${today}.xlsx`;
-  const fileUri = `${FileSystem.cacheDirectory}${fileName}`;
 
-  await FileSystem.writeAsStringAsync(fileUri, wbOut, {
-    encoding: FileSystem.EncodingType.Base64,
+  const blob = new Blob([wbOut], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 
-  await Sharing.shareAsync(fileUri, {
-    mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    dialogTitle: 'Export Expenses',
-    UTI: 'org.openxmlformats.spreadsheetml.sheet',
-  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };

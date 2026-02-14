@@ -1,11 +1,8 @@
 /**
- * MonthScreen — kawaii monthly expense view with swipe navigation.
- * FloatingEmojis background, pink FAB, pastel styling.
+ * MonthScreen — kawaii monthly expense view with tab navigation.
+ * Web version: tabs instead of PagerView swipe.
  */
-import React, { useState, useCallback, useRef } from 'react';
-import { View, TouchableOpacity, Text, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import PagerView from 'react-native-pager-view';
+import React, { useState, useCallback } from 'react';
 
 import { MonthTabs } from '../components/MonthTabs';
 import { MonthContent } from '../components/MonthContent';
@@ -24,7 +21,6 @@ import type { Expense } from '../types';
 
 export const MonthScreen: React.FC = () => {
   const styles = useStyles();
-  const pagerRef = useRef<PagerView>(null);
 
   const initialIndex = new Date().getMonth();
   const [activeMonthIndex, setActiveMonthIndex] = useState(initialIndex);
@@ -47,15 +43,7 @@ export const MonthScreen: React.FC = () => {
       const idx = months.indexOf(month);
       if (idx >= 0) {
         setActiveMonthIndex(idx);
-        pagerRef.current?.setPage(idx);
       }
-    },
-    []
-  );
-
-  const handlePageSelected = useCallback(
-    (e: { nativeEvent: { position: number } }) => {
-      setActiveMonthIndex(e.nativeEvent.position);
     },
     []
   );
@@ -75,18 +63,11 @@ export const MonthScreen: React.FC = () => {
 
   const handleDeleteExpense = useCallback(
     (index: number) => {
-      Alert.alert('Delete Expense', 'Are you sure?', [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            deleteExpense(index);
-            haptics.warning();
-            showToast('Expense deleted', 'info');
-          },
-        },
-      ]);
+      if (window.confirm('Delete this expense?')) {
+        deleteExpense(index);
+        haptics.warning();
+        showToast('Expense deleted', 'info');
+      }
     },
     [deleteExpense, haptics, showToast]
   );
@@ -122,40 +103,27 @@ export const MonthScreen: React.FC = () => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <div style={styles.safe}>
       <FloatingEmojis />
 
       {/* Month tabs */}
       <MonthTabs activeMonth={activeMonth} onSelect={handleTabSelect} />
 
-      {/* Swipeable month pages */}
-      <PagerView
-        ref={pagerRef}
-        style={styles.pager}
-        initialPage={initialIndex}
-        onPageSelected={handlePageSelected}
-      >
-        {months.map((m) => (
-          <View key={m} style={styles.page}>
-            <MonthContent
-              month={m}
-              onAddExpense={handleAddExpense}
-              onEditExpense={handleEditExpense}
-              onDeleteExpense={handleDeleteExpense}
-              onOpenSummary={handleOpenSummary}
-            />
-          </View>
-        ))}
-      </PagerView>
+      {/* Month content */}
+      <div style={styles.pageContainer}>
+        <MonthContent
+          month={activeMonth}
+          onAddExpense={handleAddExpense}
+          onEditExpense={handleEditExpense}
+          onDeleteExpense={handleDeleteExpense}
+          onOpenSummary={handleOpenSummary}
+        />
+      </div>
 
       {/* FAB — kawaii pink circle */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={handleAddExpense}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <button style={styles.fab} onClick={handleAddExpense}>
+        <span style={styles.fabText}>+</span>
+      </button>
 
       {/* Modals */}
       <ExpenseModal
@@ -177,21 +145,22 @@ export const MonthScreen: React.FC = () => {
       />
 
       <ToastContainer toasts={toasts} />
-    </SafeAreaView>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   safe: {
-    flex: 1,
+    position: 'relative',
+    height: '100%',
     backgroundColor: t.colors.bgBase,
+    display: 'flex',
+    flexDirection: 'column',
   },
-  pager: {
+  pageContainer: {
     flex: 1,
+    overflowY: 'auto' as const,
     zIndex: 1,
-  },
-  page: {
-    flex: 1,
   },
   fab: {
     position: 'absolute',
@@ -201,21 +170,23 @@ const useStyles = makeStyles((t) => ({
     height: 60,
     borderRadius: 30,
     backgroundColor: t.colors.accent,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: t.colors.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
+    boxShadow: `0 6px 16px ${t.colors.accentGlow}`,
     zIndex: 10,
     borderWidth: 2,
+    borderStyle: 'solid',
     borderColor: '#ffffff',
+    cursor: 'pointer',
+    outline: 'none',
+    padding: 0,
   },
   fabText: {
     fontSize: 30,
     color: '#ffffff',
     fontWeight: '700',
     marginTop: -2,
+    lineHeight: '1',
   },
 }));

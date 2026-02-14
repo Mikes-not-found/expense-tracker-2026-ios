@@ -2,7 +2,6 @@
  * StatCard — kawaii dashboard statistic card with pastel gradient feel.
  */
 import React from 'react';
-import { View, Text, type StyleProp, type ViewStyle } from 'react-native';
 import { Card } from './ui/Card';
 import { makeStyles } from '../utils/styles';
 
@@ -11,7 +10,7 @@ interface StatCardProps {
   value: string;
   emoji?: string;
   valueColor?: string;
-  style?: StyleProp<ViewStyle>;
+  style?: React.CSSProperties;
 }
 
 export const StatCard: React.FC<StatCardProps> = ({
@@ -24,14 +23,14 @@ export const StatCard: React.FC<StatCardProps> = ({
   const styles = useStyles();
 
   return (
-    <Card variant="elevated" style={[styles.card, style]}>
-      <View style={styles.inner}>
-        {emoji && <Text style={styles.emoji}>{emoji}</Text>}
-        <Text style={styles.label}>{label}</Text>
-        <Text style={[styles.value, valueColor ? { color: valueColor } : undefined]}>
+    <Card variant="elevated" style={{ ...styles.card, ...style }}>
+      <div style={styles.inner}>
+        {emoji && <div style={styles.emoji}>{emoji}</div>}
+        <div style={styles.label}>{label}</div>
+        <div style={{ ...styles.value, ...(valueColor ? { color: valueColor } : {}) }}>
           {value}
-        </Text>
-      </View>
+        </div>
+      </div>
     </Card>
   );
 };
@@ -43,6 +42,8 @@ const useStyles = makeStyles((t) => ({
   },
   inner: {
     padding: t.spacing.lg,
+    display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
   },
   emoji: {
@@ -51,17 +52,19 @@ const useStyles = makeStyles((t) => ({
   },
   label: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.xs + 1,
     color: t.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     letterSpacing: 1,
     marginBottom: t.spacing.sm,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
   value: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.xl + 2,
     color: t.colors.accent,
-    textAlign: 'center',
+    textAlign: 'center' as const,
   },
 }));

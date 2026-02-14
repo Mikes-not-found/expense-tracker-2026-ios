@@ -1,20 +1,8 @@
 /**
  * PickerSheet — kawaii bottom-sheet-style picker with pink pastel theme.
- * Uses Modal + Animated. Works in Expo Go.
+ * Uses CSS animations for slide up / backdrop fade.
  */
-import React, { useCallback, useMemo, useEffect, useRef } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  FlatList,
-  Animated,
-  Dimensions,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import React, { useCallback, useMemo, useState } from 'react';
 import { makeStyles } from '../utils/styles';
 import { useTheme } from '../store/ThemeContext';
 import { categoryEmojis } from '../constants/categories';
@@ -30,11 +18,6 @@ interface PickerSheetProps {
   clearLabel?: string;
 }
 
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-const ITEM_HEIGHT = 52;
-const HEADER_HEIGHT = 56;
-const MAX_HEIGHT_RATIO = 0.6;
-
 export const PickerSheet: React.FC<PickerSheetProps> = ({
   title,
   options,
@@ -47,176 +30,132 @@ export const PickerSheet: React.FC<PickerSheetProps> = ({
 }) => {
   const styles = useStyles();
   const { theme } = useTheme();
-  const slideAnim = useRef(new Animated.Value(SCREEN_HEIGHT)).current;
-  const backdropAnim = useRef(new Animated.Value(0)).current;
+  const [closing, setClosing] = useState(false);
 
   const allOptions = useMemo(
     () => (allowClear ? ['', ...options] : [...options]),
     [options, allowClear]
   );
 
-  const sheetHeight = useMemo(() => {
-    const contentHeight = HEADER_HEIGHT + allOptions.length * ITEM_HEIGHT + 40;
-    return Math.min(contentHeight, SCREEN_HEIGHT * MAX_HEIGHT_RATIO);
-  }, [allOptions.length]);
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      slideAnim.setValue(SCREEN_HEIGHT);
-      backdropAnim.setValue(0);
-    }
-  }, [visible, slideAnim, backdropAnim]);
+  const sheetHeight = Math.min(56 + allOptions.length * 52 + 40, window.innerHeight * 0.6);
 
   const handleClose = useCallback(() => {
-    Animated.parallel([
-      Animated.timing(slideAnim, {
-        toValue: SCREEN_HEIGHT,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-      Animated.timing(backdropAnim, {
-        toValue: 0,
-        duration: 250,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
+    setClosing(true);
+    setTimeout(() => {
+      setClosing(false);
       onDismiss();
-    });
-  }, [slideAnim, backdropAnim, onDismiss]);
+    }, 250);
+  }, [onDismiss]);
 
-  const handleSelect = useCallback(
-    (value: string) => {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: SCREEN_HEIGHT,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(backdropAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        onSelect(value);
-      });
-    },
-    [slideAnim, backdropAnim, onSelect]
-  );
+  const handleSelect = useCallback((value: string) => {
+    setClosing(true);
+    setTimeout(() => {
+      setClosing(false);
+      onSelect(value);
+    }, 200);
+  }, [onSelect]);
 
-  const renderItem = useCallback(
-    ({ item }: { item: string }) => {
-      const isSelected = item === selected || (item === '' && !selected);
-      const label = item || clearLabel;
-      const emoji = categoryEmojis[item] ?? '';
-
-      return (
-        <TouchableOpacity
-          style={[styles.option, isSelected && styles.optionSelected]}
-          onPress={() => handleSelect(item)}
-          activeOpacity={0.6}
-        >
-          <Text style={[styles.optionText, isSelected && styles.optionTextSelected]}>
-            {emoji ? `${emoji} ${label}` : label}
-          </Text>
-          {isSelected && <Text style={styles.checkmark}>{'\u2713'}</Text>}
-        </TouchableOpacity>
-      );
-    },
-    [selected, clearLabel, styles, handleSelect]
-  );
-
-  if (!visible) return null;
+  if (!visible && !closing) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="none"
-      onRequestClose={handleClose}
-      statusBarTranslucent
-    >
-      <KeyboardAvoidingView
-        style={styles.overlay}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <div style={styles.overlay}>
+      {/* Backdrop */}
+      <div
+        style={{
+          ...styles.backdrop,
+          animation: closing ? 'fadeOut 0.25s forwards' : 'fadeIn 0.3s forwards',
+        }}
+        onClick={handleClose}
+      />
+
+      {/* Sheet */}
+      <div
+        style={{
+          ...styles.sheet,
+          height: sheetHeight,
+          backgroundColor: theme.colors.bgSurface,
+          animation: closing ? 'slideDown 0.25s forwards' : 'slideUp 0.3s ease-out',
+        }}
       >
-        {/* Backdrop */}
-        <TouchableWithoutFeedback onPress={handleClose}>
-          <Animated.View
-            style={[
-              styles.backdrop,
-              { opacity: Animated.multiply(backdropAnim, 0.4) },
-            ]}
-          />
-        </TouchableWithoutFeedback>
+        {/* Handle bar */}
+        <div style={styles.handleContainer}>
+          <div style={{ ...styles.handle, backgroundColor: theme.colors.border }} />
+        </div>
 
-        {/* Sheet */}
-        <Animated.View
-          style={[
-            styles.sheet,
-            {
-              height: sheetHeight,
-              backgroundColor: theme.colors.bgSurface,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          {/* Handle bar */}
-          <View style={styles.handleContainer}>
-            <View style={[styles.handle, { backgroundColor: theme.colors.border }]} />
-          </View>
+        {/* Header */}
+        <div style={styles.header}>
+          <span style={styles.title}>{'\u{1F338}'} {title}</span>
+        </div>
 
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>{'\u{1F338}'} {title}</Text>
-          </View>
+        {/* Options list */}
+        <div style={styles.listContent}>
+          {allOptions.map((item) => {
+            const isSelected = item === selected || (item === '' && !selected);
+            const label = item || clearLabel;
+            const emoji = categoryEmojis[item] ?? '';
 
-          {/* Options list */}
-          <FlatList
-            data={allOptions}
-            keyExtractor={(item: string) => item || '__clear__'}
-            renderItem={renderItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
-        </Animated.View>
-      </KeyboardAvoidingView>
-    </Modal>
+            return (
+              <div
+                key={item || '__clear__'}
+                style={{
+                  ...styles.option,
+                  ...(isSelected ? styles.optionSelected : {}),
+                }}
+                onClick={() => handleSelect(item)}
+              >
+                <span style={{
+                  ...styles.optionText,
+                  ...(isSelected ? styles.optionTextSelected : {}),
+                }}>
+                  {emoji ? `${emoji} ${label}` : label}
+                </span>
+                {isSelected && <span style={styles.checkmark}>{'\u2713'}</span>}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Extra keyframe for slide down */}
+      <style>{`
+        @keyframes slideDown {
+          from { transform: translateY(0); }
+          to { transform: translateY(100%); }
+        }
+      `}</style>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   overlay: {
-    flex: 1,
+    position: 'fixed',
+    inset: 0,
+    display: 'flex',
+    flexDirection: 'column',
     justifyContent: 'flex-end',
+    zIndex: 900,
   },
   backdrop: {
-    ...({ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 } as const),
-    backgroundColor: '#000',
+    position: 'absolute',
+    inset: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   sheet: {
+    position: 'relative',
     borderTopLeftRadius: t.radius.xl,
     borderTopRightRadius: t.radius.xl,
     overflow: 'hidden',
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderBottomWidth: 0,
     borderColor: t.colors.border,
+    display: 'flex',
+    flexDirection: 'column',
   },
   handleContainer: {
-    alignItems: 'center',
+    display: 'flex',
+    justifyContent: 'center',
     paddingTop: t.spacing.sm,
     paddingBottom: t.spacing.xs,
   },
@@ -227,42 +166,57 @@ const useStyles = makeStyles((t) => ({
     opacity: 0.5,
   },
   header: {
-    paddingHorizontal: t.spacing.lg,
-    paddingVertical: t.spacing.md,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
+    paddingTop: t.spacing.md,
+    paddingBottom: t.spacing.md,
     borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
     borderBottomColor: t.colors.border,
   },
   title: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.lg + 2,
     color: t.colors.textPrimary,
   },
   listContent: {
+    flex: 1,
+    overflowY: 'auto' as const,
     paddingBottom: t.spacing.lg,
   },
   option: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: t.spacing.md + 2,
-    paddingHorizontal: t.spacing.lg,
+    paddingTop: t.spacing.md + 2,
+    paddingBottom: t.spacing.md + 2,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
     borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
     borderBottomColor: t.colors.border,
+    cursor: 'pointer',
+    WebkitTapHighlightColor: 'transparent',
   },
   optionSelected: {
     backgroundColor: t.colors.accentMuted,
   },
   optionText: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
   },
   optionTextSelected: {
     color: t.colors.accent,
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
   },
   checkmark: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.lg + 2,
     color: t.colors.accent,
   },

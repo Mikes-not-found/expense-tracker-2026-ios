@@ -1,13 +1,12 @@
 /**
  * App Context Provider — Dependency Inversion via React Context.
- * Wraps useReducer + auto-persist to AsyncStorage.
+ * Wraps useReducer + auto-persist to localStorage.
  * All child components access state via custom hooks (no prop drilling).
  */
 import React, {
   createContext,
   useReducer,
   useEffect,
-  useCallback,
   useRef,
   type ReactNode,
 } from 'react';

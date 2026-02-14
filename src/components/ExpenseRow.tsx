@@ -1,19 +1,14 @@
 /**
  * ExpenseRow — kawaii expense entry with card-style layout.
- * Date shown as prominent day circle, name + amount on the right.
  */
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
 import { Badge } from './ui/Badge';
 import { makeStyles } from '../utils/styles';
-import { useTheme } from '../store/ThemeContext';
 import type { Expense } from '../types';
-import type { MonthKey } from '../constants/categories';
 
 interface ExpenseRowProps {
   expense: Expense;
   index: number;
-  month: MonthKey;
   onEdit: (index: number) => void;
   onDelete: (index: number) => void;
 }
@@ -21,63 +16,57 @@ interface ExpenseRowProps {
 export const ExpenseRow: React.FC<ExpenseRowProps> = ({
   expense,
   index,
-  month,
   onEdit,
   onDelete,
 }) => {
   const styles = useStyles();
-  const { theme } = useTheme();
   const day = String(expense.date).padStart(2, '0');
 
   return (
-    <View style={styles.container}>
+    <div style={styles.container}>
       {/* Left: day circle */}
-      <View style={styles.dayCircle}>
-        <Text style={styles.dayNumber}>{day}</Text>
-      </View>
+      <div style={styles.dayCircle}>
+        <span style={styles.dayNumber}>{day}</span>
+      </div>
 
       {/* Center: name + badges */}
-      <View style={styles.center}>
-        <Text style={styles.name} numberOfLines={1}>{expense.name}</Text>
-        <View style={styles.badges}>
+      <div style={styles.center}>
+        <div style={styles.name}>{expense.name}</div>
+        <div style={styles.badges}>
           <Badge label={expense.primary} />
           {expense.secondary ? (
-            <Text style={styles.secondary} numberOfLines={1}>{expense.secondary}</Text>
+            <span style={styles.secondary}>{expense.secondary}</span>
           ) : null}
-        </View>
-      </View>
+        </div>
+      </div>
 
       {/* Right: amount + actions */}
-      <View style={styles.right}>
-        <Text style={styles.amount}>{'\u20AC'}{expense.amount.toFixed(2)}</Text>
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => onEdit(index)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.editIcon}>{'\u270E'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.actionBtn, styles.deleteBtn]}
-            onPress={() => onDelete(index)}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <Text style={styles.deleteIcon}>{'\u2715'}</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <div style={styles.right}>
+        <span style={styles.amount}>{'\u20AC'}{expense.amount.toFixed(2)}</span>
+        <div style={styles.actions}>
+          <button style={styles.actionBtn} onClick={() => onEdit(index)}>
+            <span style={styles.editIcon}>{'\u270E'}</span>
+          </button>
+          <button style={{ ...styles.actionBtn, ...styles.deleteBtn }} onClick={() => onDelete(index)}>
+            <span style={styles.deleteIcon}>{'\u2715'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   container: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: t.spacing.md,
-    paddingHorizontal: t.spacing.md,
+    paddingTop: t.spacing.md,
+    paddingBottom: t.spacing.md,
+    paddingLeft: t.spacing.md,
+    paddingRight: t.spacing.md,
     borderBottomWidth: 1,
+    borderBottomStyle: 'solid',
     borderBottomColor: t.colors.border,
     backgroundColor: t.colors.bgSurface,
     gap: t.spacing.md,
@@ -87,45 +76,63 @@ const useStyles = makeStyles((t) => ({
     height: 44,
     borderRadius: 22,
     backgroundColor: t.colors.accentMuted,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
+    flexShrink: 0,
   },
   dayNumber: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.lg,
     color: t.colors.accent,
   },
   center: {
     flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
     gap: 4,
+    minWidth: 0,
   },
   name: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.md,
     color: t.colors.textPrimary,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
   },
   badges: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     gap: t.spacing.xs,
   },
   secondary: {
     fontFamily: t.fonts.mono,
+    fontWeight: t.fontWeights.mono,
     fontSize: t.fontSize.xs + 1,
     color: t.colors.textSecondary,
   },
   right: {
+    display: 'flex',
+    flexDirection: 'column',
     alignItems: 'flex-end',
     gap: t.spacing.xs,
+    flexShrink: 0,
   },
   amount: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.md + 2,
     color: t.colors.accent,
   },
   actions: {
+    display: 'flex',
     flexDirection: 'row',
     gap: t.spacing.xs,
   },
@@ -134,10 +141,15 @@ const useStyles = makeStyles((t) => ({
     height: 30,
     borderRadius: t.radius.sm + 2,
     backgroundColor: t.colors.bgInteractive,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
+    cursor: 'pointer',
+    outline: 'none',
+    padding: 0,
   },
   deleteBtn: {
     backgroundColor: t.colors.redMuted,

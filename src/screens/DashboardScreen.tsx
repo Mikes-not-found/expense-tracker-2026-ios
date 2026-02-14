@@ -3,8 +3,6 @@
  * Floating emojis, pastel stat cards, tabbed breakdown.
  */
 import React, { useState, useCallback } from 'react';
-import { View, ScrollView, Text, TouchableOpacity, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { StatCard } from '../components/StatCard';
 import { SpendingRow } from '../components/SpendingRow';
@@ -44,7 +42,6 @@ export const DashboardScreen: React.FC = () => {
   const haptics = useHaptics();
   const { theme, isDark, toggleTheme } = useTheme();
   const styles = useStyles();
-  const { width: screenWidth } = useWindowDimensions();
 
   const [filterMonth, setFilterMonth] = useState<MonthKey | ''>('');
   const [filterCategory, setFilterCategory] = useState('');
@@ -116,9 +113,6 @@ export const DashboardScreen: React.FC = () => {
   const monthDisplayNames = months.map((m) => monthShortNames[m]);
   const selectedMonthDisplay = filterMonth ? monthShortNames[filterMonth] : '';
 
-  // Card width: 2 per row, accounting for padding and gap
-  const cardWidth = (screenWidth - 16 * 2 - 16) / 2;
-
   const tabs: { key: BreakdownTab; label: string; emoji: string }[] = [
     { key: 'monthly', label: 'Monthly', emoji: '\u{1F4C5}' },
     { key: 'category', label: 'Category', emoji: '\u{1F3F7}\uFE0F' },
@@ -126,149 +120,151 @@ export const DashboardScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <div style={styles.safe}>
       <FloatingEmojis />
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
-        {/* Header */}
-        <View style={styles.headerSection}>
-          <View>
-            <Text style={styles.appTitle}>{'\u{1F338}'} Celi Expenses</Text>
-            <Text style={styles.appSubtitle}>Kakeibo 2026 {'\u{1F33F}'}</Text>
-          </View>
-          <TouchableOpacity style={styles.themeToggle} onPress={toggleTheme} activeOpacity={0.7}>
-            <Text style={styles.themeToggleIcon}>{isDark ? '\u2600\uFE0F' : '\u{1F319}'}</Text>
-          </TouchableOpacity>
-        </View>
+      <div style={styles.scroll}>
+        <div style={styles.content}>
+          {/* Header */}
+          <div style={styles.headerSection}>
+            <div>
+              <div style={styles.appTitle}>{'\u{1F338}'} Celi Expenses</div>
+              <div style={styles.appSubtitle}>Kakeibo 2026 {'\u{1F33F}'}</div>
+            </div>
+            <div style={styles.themeToggle} onClick={toggleTheme}>
+              <span style={styles.themeToggleIcon}>{isDark ? '\u2600\uFE0F' : '\u{1F319}'}</span>
+            </div>
+          </div>
 
-        {/* Toolbar — Import/Export + Filters */}
-        <View style={styles.toolbar}>
-          <Button variant="success" onPress={handleImport} small>
-            {'\u{1F4E5}'} Import
-          </Button>
-          <Button variant="primary" onPress={handleExport} small>
-            {'\u{1F4E4}'} Export
-          </Button>
-          <TouchableOpacity
-            style={styles.filterChip}
-            onPress={() => setMonthPickerVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={filterMonth ? styles.filterChipTextActive : styles.filterChipText}>
-              {filterMonth ? monthShortNames[filterMonth] : '\u{1F4C5} All'}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.filterChip}
-            onPress={() => setCategoryPickerVisible(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={filterCategory ? styles.filterChipTextActive : styles.filterChipText} numberOfLines={1}>
-              {filterCategory || '\u{1F3F7}\uFE0F All'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Filtered total */}
-        {(filterMonth || filterCategory) ? (
-          <View style={styles.filteredBanner}>
-            <Text style={styles.filteredLabel}>Filtered Total</Text>
-            <Text style={styles.filteredValue}>{formatEuro(filteredTotal)}</Text>
-          </View>
-        ) : null}
-
-        {/* Stats Grid — 2x2 equal cards */}
-        <View style={styles.statsGrid}>
-          <StatCard
-            label="Total Year 2026"
-            value={formatEuro(dashboard.yearTotal)}
-            emoji={'\u{1F4B0}'}
-            style={{ width: cardWidth }}
-          />
-          <StatCard
-            label="Monthly Avg"
-            value={formatEuro(dashboard.monthlyAverage)}
-            emoji={'\u{1F4CA}'}
-            valueColor={theme.colors.amber}
-            style={{ width: cardWidth }}
-          />
-          <StatCard
-            label="Top Month"
-            value={dashboard.topMonth}
-            emoji={'\u{1F3C6}'}
-            valueColor={theme.colors.green}
-            style={{ width: cardWidth }}
-          />
-          <StatCard
-            label="Total Entries"
-            value={String(dashboard.totalEntries)}
-            emoji={'\u{1F4DD}'}
-            style={{ width: cardWidth }}
-          />
-        </View>
-
-        {/* Breakdown Tabs */}
-        <View style={styles.tabBar}>
-          {tabs.map((tab) => (
-            <TouchableOpacity
-              key={tab.key}
-              style={[styles.tab, activeTab === tab.key && styles.tabActive]}
-              onPress={() => setActiveTab(tab.key)}
-              activeOpacity={0.7}
+          {/* Toolbar — Import/Export + Filters */}
+          <div style={styles.toolbar}>
+            <Button variant="success" onClick={handleImport} small>
+              {'\u{1F4E5}'} Import
+            </Button>
+            <Button variant="primary" onClick={handleExport} small>
+              {'\u{1F4E4}'} Export
+            </Button>
+            <div
+              style={styles.filterChip}
+              onClick={() => setMonthPickerVisible(true)}
             >
-              <Text style={[styles.tabText, activeTab === tab.key && styles.tabTextActive]}>
-                {tab.emoji} {tab.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              <span style={filterMonth ? styles.filterChipTextActive : styles.filterChipText}>
+                {filterMonth ? monthShortNames[filterMonth] : '\u{1F4C5} All'}
+              </span>
+            </div>
+            <div
+              style={styles.filterChip}
+              onClick={() => setCategoryPickerVisible(true)}
+            >
+              <span style={filterCategory ? styles.filterChipTextActive : styles.filterChipText}>
+                {filterCategory || '\u{1F3F7}\uFE0F All'}
+              </span>
+            </div>
+          </div>
 
-        {/* Active breakdown content */}
-        <Card style={styles.sectionCard}>
-          <View style={styles.sectionBody}>
-            {activeTab === 'monthly' &&
-              months.map((m) => (
-                <SpendingRow
-                  key={m}
-                  name={monthShortNames[m]}
-                  amount={dashboard.monthlyTotals[m]}
-                  total={dashboard.yearTotal}
-                  emoji={monthEmojis[m]}
-                />
-              ))}
+          {/* Filtered total */}
+          {(filterMonth || filterCategory) ? (
+            <div style={styles.filteredBanner}>
+              <span style={styles.filteredLabel}>Filtered Total</span>
+              <span style={styles.filteredValue}>{formatEuro(filteredTotal)}</span>
+            </div>
+          ) : null}
 
-            {activeTab === 'category' &&
-              (sortedCategories.length > 0 ? (
-                sortedCategories.map(([cat, amount]) => (
+          {/* Stats Grid — 2x2 equal cards */}
+          <div style={styles.statsGrid}>
+            <StatCard
+              label="Total Year 2026"
+              value={formatEuro(dashboard.yearTotal)}
+              emoji={'\u{1F4B0}'}
+              style={{ flex: '1 1 calc(50% - 8px)' }}
+            />
+            <StatCard
+              label="Monthly Avg"
+              value={formatEuro(dashboard.monthlyAverage)}
+              emoji={'\u{1F4CA}'}
+              valueColor={theme.colors.amber}
+              style={{ flex: '1 1 calc(50% - 8px)' }}
+            />
+            <StatCard
+              label="Top Month"
+              value={dashboard.topMonth}
+              emoji={'\u{1F3C6}'}
+              valueColor={theme.colors.green}
+              style={{ flex: '1 1 calc(50% - 8px)' }}
+            />
+            <StatCard
+              label="Total Entries"
+              value={String(dashboard.totalEntries)}
+              emoji={'\u{1F4DD}'}
+              style={{ flex: '1 1 calc(50% - 8px)' }}
+            />
+          </div>
+
+          {/* Breakdown Tabs */}
+          <div style={styles.tabBar}>
+            {tabs.map((tab) => (
+              <div
+                key={tab.key}
+                style={{ ...styles.tab, ...(activeTab === tab.key ? styles.tabActive : {}) }}
+                onClick={() => setActiveTab(tab.key)}
+              >
+                <span style={{
+                  ...styles.tabText,
+                  ...(activeTab === tab.key ? styles.tabTextActive : {}),
+                }}>
+                  {tab.emoji} {tab.label}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Active breakdown content */}
+          <Card style={styles.sectionCard}>
+            <div style={styles.sectionBody}>
+              {activeTab === 'monthly' &&
+                months.map((m) => (
                   <SpendingRow
-                    key={cat}
-                    name={cat}
-                    amount={amount}
+                    key={m}
+                    name={monthShortNames[m]}
+                    amount={dashboard.monthlyTotals[m]}
                     total={dashboard.yearTotal}
-                    emoji={categoryEmojis[cat]}
+                    emoji={monthEmojis[m]}
                   />
-                ))
-              ) : (
-                <Text style={styles.emptyText}>No category data yet</Text>
-              ))}
+                ))}
 
-            {activeTab === 'subcategory' &&
-              (sortedSubcategories.length > 0 ? (
-                sortedSubcategories.map(([sub, amount]) => (
-                  <SpendingRow
-                    key={sub}
-                    name={sub}
-                    amount={amount}
-                    total={dashboard.yearTotal}
-                  />
-                ))
-              ) : (
-                <Text style={styles.emptyText}>No subcategory data yet</Text>
-              ))}
-          </View>
-        </Card>
+              {activeTab === 'category' &&
+                (sortedCategories.length > 0 ? (
+                  sortedCategories.map(([cat, amount]) => (
+                    <SpendingRow
+                      key={cat}
+                      name={cat}
+                      amount={amount}
+                      total={dashboard.yearTotal}
+                      emoji={categoryEmojis[cat]}
+                    />
+                  ))
+                ) : (
+                  <div style={styles.emptyText}>No category data yet</div>
+                ))}
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
+              {activeTab === 'subcategory' &&
+                (sortedSubcategories.length > 0 ? (
+                  sortedSubcategories.map(([sub, amount]) => (
+                    <SpendingRow
+                      key={sub}
+                      name={sub}
+                      amount={amount}
+                      total={dashboard.yearTotal}
+                    />
+                  ))
+                ) : (
+                  <div style={styles.emptyText}>No subcategory data yet</div>
+                ))}
+            </div>
+          </Card>
+
+          <div style={{ height: 40 }} />
+        </div>
+      </div>
 
       {/* Bottom Sheet Pickers */}
       <PickerSheet
@@ -294,24 +290,31 @@ export const DashboardScreen: React.FC = () => {
       />
 
       <ToastContainer toasts={toasts} />
-    </SafeAreaView>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   safe: {
-    flex: 1,
+    position: 'relative',
+    height: '100%',
     backgroundColor: t.colors.bgBase,
+    display: 'flex',
+    flexDirection: 'column',
   },
   scroll: {
     flex: 1,
+    overflowY: 'auto' as const,
     zIndex: 1,
   },
   content: {
     padding: t.spacing.md,
+    display: 'flex',
+    flexDirection: 'column',
     gap: t.spacing.md,
   },
   headerSection: {
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -319,11 +322,13 @@ const useStyles = makeStyles((t) => ({
   },
   appTitle: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize['2xl'] + 2,
     color: t.colors.textPrimary,
   },
   appSubtitle: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.sm + 1,
     color: t.colors.textMuted,
     marginTop: 2,
@@ -333,104 +338,132 @@ const useStyles = makeStyles((t) => ({
     height: 48,
     borderRadius: 24,
     backgroundColor: t.colors.bgElevated,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
+    cursor: 'pointer',
   },
   themeToggleIcon: {
     fontSize: 22,
   },
   toolbar: {
+    display: 'flex',
     flexDirection: 'row',
     gap: t.spacing.sm,
     alignItems: 'center',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap' as const,
   },
   filterChip: {
-    paddingVertical: t.spacing.xs + 3,
-    paddingHorizontal: t.spacing.md,
+    paddingTop: t.spacing.xs + 3,
+    paddingBottom: t.spacing.xs + 3,
+    paddingLeft: t.spacing.md,
+    paddingRight: t.spacing.md,
     backgroundColor: t.colors.bgSurface,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     borderRadius: t.radius.full,
+    cursor: 'pointer',
   },
   filterChipText: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.sm,
     color: t.colors.textMuted,
   },
   filterChipTextActive: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.sm,
     color: t.colors.accent,
   },
   filteredBanner: {
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: t.spacing.sm + 2,
-    paddingHorizontal: t.spacing.md,
+    paddingTop: t.spacing.sm + 2,
+    paddingBottom: t.spacing.sm + 2,
+    paddingLeft: t.spacing.md,
+    paddingRight: t.spacing.md,
     backgroundColor: t.colors.accentMuted,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     borderRadius: t.radius.md,
   },
   filteredLabel: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.xs + 1,
     color: t.colors.textMuted,
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     letterSpacing: 1,
   },
   filteredValue: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.lg + 2,
     color: t.colors.accent,
   },
   statsGrid: {
+    display: 'flex',
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexWrap: 'wrap' as const,
     gap: t.spacing.md,
     justifyContent: 'space-between',
   },
   tabBar: {
+    display: 'flex',
     flexDirection: 'row',
     backgroundColor: t.colors.bgSurface,
     borderRadius: t.radius.full,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     padding: 3,
   },
   tab: {
     flex: 1,
-    paddingVertical: t.spacing.sm + 2,
+    paddingTop: t.spacing.sm + 2,
+    paddingBottom: t.spacing.sm + 2,
+    display: 'flex',
+    justifyContent: 'center',
     alignItems: 'center',
     borderRadius: t.radius.full,
+    cursor: 'pointer',
   },
   tabActive: {
     backgroundColor: t.colors.accent,
   },
   tabText: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.sm,
     color: t.colors.textMuted,
   },
   tabTextActive: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     color: '#ffffff',
   },
   sectionCard: {
     overflow: 'hidden',
   },
   sectionBody: {
-    paddingVertical: t.spacing.sm,
+    paddingTop: t.spacing.sm,
+    paddingBottom: t.spacing.sm,
   },
   emptyText: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md,
     color: t.colors.textMuted,
-    textAlign: 'center',
-    paddingVertical: t.spacing.xl,
+    textAlign: 'center' as const,
+    paddingTop: t.spacing.xl,
+    paddingBottom: t.spacing.xl,
   },
 }));

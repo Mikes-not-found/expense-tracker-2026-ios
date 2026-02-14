@@ -1,11 +1,8 @@
 /**
- * FloatingEmojis — animated floating emoji background layer.
- * Recreates the CSS floatEmoji animation from the kawaii HTML.
- * Uses React Native Animated API for smooth float-up animations.
- * Slow, dreamy pace — duration 25-50s, delays 5-25s.
+ * FloatingEmojis — CSS animated floating emoji background layer.
+ * Recreates the kawaii float-up animation using CSS @keyframes.
  */
-import React, { useEffect, useRef, useMemo } from 'react';
-import { View, Text, Animated, Dimensions, StyleSheet } from 'react-native';
+import React, { useMemo } from 'react';
 
 const EMOJIS = [
   '\u{1F375}', '\u{1F338}', '\u{1F496}', '\u2728', '\u{1F33F}',
@@ -14,117 +11,51 @@ const EMOJIS = [
   '\u{1F4AB}', '\u{1F98B}', '\u{1F340}', '\u2B50', '\u{1F319}',
 ];
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const SCREEN_HEIGHT = Dimensions.get('window').height;
-
-interface FloatingEmojiConfig {
+interface EmojiConfig {
   emoji: string;
-  left: number;
+  left: string;
   size: number;
   duration: number;
   delay: number;
-  startY: number;
 }
 
-const FloatingEmoji: React.FC<{ config: FloatingEmojiConfig }> = ({ config }) => {
-  const translateY = useRef(new Animated.Value(config.startY)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const rotate = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const animate = () => {
-      translateY.setValue(SCREEN_HEIGHT + 50);
-      opacity.setValue(0);
-      rotate.setValue(0);
-
-      Animated.parallel([
-        Animated.timing(translateY, {
-          toValue: -80,
-          duration: config.duration,
-          useNativeDriver: true,
-        }),
-        Animated.sequence([
-          Animated.timing(opacity, {
-            toValue: 0.45,
-            duration: config.duration * 0.15,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0.45,
-            duration: config.duration * 0.6,
-            useNativeDriver: true,
-          }),
-          Animated.timing(opacity, {
-            toValue: 0,
-            duration: config.duration * 0.25,
-            useNativeDriver: true,
-          }),
-        ]),
-        Animated.timing(rotate, {
-          toValue: 1,
-          duration: config.duration,
-          useNativeDriver: true,
-        }),
-      ]).start(() => {
-        setTimeout(animate, config.delay * 0.5);
-      });
-    };
-
-    const timer = setTimeout(animate, config.delay);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const spin = rotate.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['-15deg', '15deg'],
-  });
-
-  return (
-    <Animated.View
-      style={[
-        styles.emoji,
-        {
-          left: config.left,
-          transform: [{ translateY }, { rotate: spin }],
-          opacity,
-        },
-      ]}
-      pointerEvents="none"
-    >
-      <Text style={{ fontSize: config.size }}>{config.emoji}</Text>
-    </Animated.View>
-  );
-};
-
 export const FloatingEmojis: React.FC = () => {
-  const configs = useMemo<FloatingEmojiConfig[]>(() =>
-    EMOJIS.map((emoji, i) => ({
+  const configs = useMemo<EmojiConfig[]>(() =>
+    EMOJIS.map((emoji) => ({
       emoji,
-      left: Math.random() * (SCREEN_WIDTH - 30),
+      left: `${Math.random() * 95}%`,
       size: 14 + Math.random() * 14,
-      duration: 25000 + Math.random() * 25000,
-      delay: 5000 + Math.random() * 20000,
-      startY: SCREEN_HEIGHT + 50 + Math.random() * 200,
+      duration: 25 + Math.random() * 25,
+      delay: 5 + Math.random() * 20,
     })),
     []
   );
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <div style={containerStyle}>
       {configs.map((config, i) => (
-        <FloatingEmoji key={i} config={config} />
+        <span
+          key={i}
+          style={{
+            position: 'absolute',
+            left: config.left,
+            bottom: '-40px',
+            fontSize: config.size,
+            animation: `floatUp ${config.duration}s ${config.delay}s linear infinite`,
+            pointerEvents: 'none',
+          }}
+        >
+          {config.emoji}
+        </span>
       ))}
-    </View>
+    </div>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
-    zIndex: 0,
-  },
-  emoji: {
-    position: 'absolute',
-  },
-});
+const containerStyle: React.CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  overflow: 'hidden',
+  zIndex: 0,
+  pointerEvents: 'none',
+};

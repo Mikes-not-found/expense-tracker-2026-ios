@@ -1,8 +1,7 @@
 /**
- * AsyncStorage wrapper — typed, safe, DRY.
- * Replaces localStorage from the PWA version.
+ * localStorage wrapper — typed, safe, DRY.
+ * Web replacement for AsyncStorage.
  */
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { Expenses, MonthlySummaries } from '../types';
 
 const KEYS = {
@@ -17,37 +16,33 @@ export interface StoredData {
   originalWorkbookData: string | null;
 }
 
-/** Load all persisted data from AsyncStorage */
+/** Load all persisted data from localStorage */
 export const loadData = async (): Promise<StoredData> => {
-  const [rawExpenses, rawSummaries, rawWorkbook] = await AsyncStorage.multiGet([
-    KEYS.expenses,
-    KEYS.summaries,
-    KEYS.workbook,
-  ]);
+  const rawExpenses = localStorage.getItem(KEYS.expenses);
+  const rawSummaries = localStorage.getItem(KEYS.summaries);
+  const rawWorkbook = localStorage.getItem(KEYS.workbook);
 
   return {
-    expenses: rawExpenses[1] ? JSON.parse(rawExpenses[1]) : {},
-    monthlySummaries: rawSummaries[1] ? JSON.parse(rawSummaries[1]) : {},
-    originalWorkbookData: rawWorkbook[1] ?? null,
+    expenses: rawExpenses ? JSON.parse(rawExpenses) : {},
+    monthlySummaries: rawSummaries ? JSON.parse(rawSummaries) : {},
+    originalWorkbookData: rawWorkbook ?? null,
   };
 };
 
-/** Save expenses and summaries to AsyncStorage */
+/** Save expenses and summaries to localStorage */
 export const saveData = async (
   expenses: Expenses,
   summaries: MonthlySummaries
 ): Promise<void> => {
-  await AsyncStorage.multiSet([
-    [KEYS.expenses, JSON.stringify(expenses)],
-    [KEYS.summaries, JSON.stringify(summaries)],
-  ]);
+  localStorage.setItem(KEYS.expenses, JSON.stringify(expenses));
+  localStorage.setItem(KEYS.summaries, JSON.stringify(summaries));
 };
 
 /** Save original workbook data (base64) */
 export const saveWorkbook = async (base64: string | null): Promise<void> => {
   if (base64) {
-    await AsyncStorage.setItem(KEYS.workbook, base64);
+    localStorage.setItem(KEYS.workbook, base64);
   } else {
-    await AsyncStorage.removeItem(KEYS.workbook);
+    localStorage.removeItem(KEYS.workbook);
   }
 };

@@ -2,7 +2,6 @@
  * Button — kawaii button with rounded pill shapes and pastel colors.
  */
 import React, { type ReactNode } from 'react';
-import { TouchableOpacity, Text, type ViewStyle } from 'react-native';
 import { makeStyles } from '../../utils/styles';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -10,17 +9,17 @@ type ButtonVariant = 'primary' | 'success' | 'danger' | 'ghost';
 
 interface ButtonProps {
   variant?: ButtonVariant;
-  onPress: () => void;
+  onClick: () => void;
   children: ReactNode;
   icon?: ReactNode;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: React.CSSProperties;
   small?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
-  onPress,
+  onClick,
   children,
   icon,
   disabled = false,
@@ -56,49 +55,54 @@ export const Button: React.FC<ButtonProps> = ({
   const v = variantStyles[variant];
 
   return (
-    <TouchableOpacity
-      onPress={onPress}
+    <button
+      onClick={onClick}
       disabled={disabled}
-      activeOpacity={0.7}
-      style={[
-        styles.base,
-        {
-          backgroundColor: v.bg,
-          borderColor: v.border,
-          opacity: disabled ? 0.5 : 1,
-        },
-        small && styles.small,
-        style,
-      ]}
+      style={{
+        ...styles.base,
+        backgroundColor: v.bg,
+        borderColor: v.border,
+        color: v.text,
+        opacity: disabled ? 0.5 : 1,
+        ...(small ? styles.small : {}),
+        ...style,
+      }}
     >
       {icon}
-      <Text style={[styles.text, { color: v.text }, small && styles.textSmall]}>
+      <span style={{
+        fontFamily: theme.fonts.monoBold,
+        fontWeight: theme.fontWeights.monoBold,
+        fontSize: small ? theme.fontSize.sm : theme.fontSize.sm + 1,
+      }}>
         {children}
-      </Text>
-    </TouchableOpacity>
+      </span>
+    </button>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   base: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: t.spacing.sm,
-    paddingVertical: t.spacing.sm + 2,
-    paddingHorizontal: t.spacing.lg,
+    paddingTop: t.spacing.sm + 2,
+    paddingBottom: t.spacing.sm + 2,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderRadius: t.radius.full,
+    cursor: 'pointer',
+    outline: 'none',
+    transition: 'opacity 0.15s, transform 0.1s',
+    WebkitTapHighlightColor: 'transparent',
   },
   small: {
-    paddingVertical: t.spacing.xs + 3,
-    paddingHorizontal: t.spacing.md,
-  },
-  text: {
-    fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.sm + 1,
-  },
-  textSmall: {
-    fontSize: t.fontSize.sm,
+    paddingTop: t.spacing.xs + 3,
+    paddingBottom: t.spacing.xs + 3,
+    paddingLeft: t.spacing.md,
+    paddingRight: t.spacing.md,
   },
 }));

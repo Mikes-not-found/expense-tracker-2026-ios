@@ -24,15 +24,26 @@ const shared = {
   },
 
   fonts: {
-    mono: 'Quicksand_400Regular',
-    monoMedium: 'Quicksand_500Medium',
-    monoSemiBold: 'Quicksand_600SemiBold',
-    monoBold: 'Quicksand_700Bold',
-    sans: 'Inter-Regular',
-    sansMedium: 'Inter-Medium',
-    sansSemiBold: 'Inter-SemiBold',
-    sansBold: 'Inter-Bold',
+    mono: "'Quicksand', sans-serif",
+    monoMedium: "'Quicksand', sans-serif",
+    monoSemiBold: "'Quicksand', sans-serif",
+    monoBold: "'Quicksand', sans-serif",
+    sans: "'Inter', sans-serif",
+    sansMedium: "'Inter', sans-serif",
+    sansSemiBold: "'Inter', sans-serif",
+    sansBold: "'Inter', sans-serif",
   },
+
+  fontWeights: {
+    mono: 400,
+    monoMedium: 500,
+    monoSemiBold: 600,
+    monoBold: 700,
+    sans: 400,
+    sansMedium: 500,
+    sansSemiBold: 600,
+    sansBold: 700,
+  } as Record<string, number>,
 
   fontSize: {
     xs: 10,
@@ -156,6 +167,7 @@ export interface Theme {
   spacing: typeof shared.spacing;
   radius: typeof shared.radius;
   fonts: typeof shared.fonts;
+  fontWeights: typeof shared.fontWeights;
   fontSize: typeof shared.fontSize;
 }
 

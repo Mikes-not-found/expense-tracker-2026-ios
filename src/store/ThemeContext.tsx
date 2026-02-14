@@ -1,6 +1,6 @@
 /**
  * ThemeContext — manages dark/light mode with persistence.
- * Persists preference to AsyncStorage.
+ * Persists preference to localStorage.
  */
 import React, {
   createContext,
@@ -11,7 +11,6 @@ import React, {
   useMemo,
   type ReactNode,
 } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   darkTheme,
   lightTheme,
@@ -38,19 +37,14 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [mode, setModeState] = useState<ThemeMode>('dark');
-
-  useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((saved) => {
-      if (saved === 'light' || saved === 'dark') {
-        setModeState(saved);
-      }
-    });
-  }, []);
+  const [mode, setModeState] = useState<ThemeMode>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    return saved === 'light' || saved === 'dark' ? saved : 'dark';
+  });
 
   const setMode = useCallback((newMode: ThemeMode) => {
     setModeState(newMode);
-    AsyncStorage.setItem(STORAGE_KEY, newMode);
+    localStorage.setItem(STORAGE_KEY, newMode);
   }, []);
 
   const toggleTheme = useCallback(() => {

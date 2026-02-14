@@ -1,8 +1,7 @@
 /**
  * Toast — kawaii notification with pink-themed styling.
  */
-import React, { useEffect, useRef } from 'react';
-import { View, Text, Animated } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { makeStyles } from '../utils/styles';
 import { useTheme } from '../store/ThemeContext';
 import type { ToastMessage } from '../types';
@@ -14,9 +13,7 @@ interface ToastContainerProps {
 const SingleToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
   const styles = useStyles();
   const { theme } = useTheme();
-  const translateY = useRef(new Animated.Value(20)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.9)).current;
+  const [fading, setFading] = useState(false);
 
   const toastColors: Record<string, { bg: string; text: string }> = {
     success: { bg: theme.colors.green, text: '#ffffff' },
@@ -25,33 +22,23 @@ const SingleToast: React.FC<{ toast: ToastMessage }> = ({ toast }) => {
   };
 
   useEffect(() => {
-    Animated.parallel([
-      Animated.timing(translateY, { toValue: 0, duration: 350, useNativeDriver: true }),
-      Animated.timing(opacity, { toValue: 1, duration: 350, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, friction: 6, useNativeDriver: true }),
-    ]).start();
-
-    const fadeTimer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(opacity, { toValue: 0, duration: 300, useNativeDriver: true }),
-        Animated.timing(translateY, { toValue: -10, duration: 300, useNativeDriver: true }),
-      ]).start();
-    }, 2700);
-
+    const fadeTimer = setTimeout(() => setFading(true), 2700);
     return () => clearTimeout(fadeTimer);
   }, []);
 
   const colors = toastColors[toast.type] ?? toastColors.info;
 
   return (
-    <Animated.View
-      style={[
-        styles.toast,
-        { backgroundColor: colors.bg, transform: [{ translateY }, { scale }], opacity },
-      ]}
+    <div
+      style={{
+        ...styles.toast,
+        backgroundColor: colors.bg,
+        color: colors.text,
+        animation: fading ? 'toastOut 0.3s forwards' : 'toastIn 0.35s ease-out',
+      }}
     >
-      <Text style={[styles.toastText, { color: colors.text }]}>{toast.message}</Text>
-    </Animated.View>
+      <span style={styles.toastText}>{toast.message}</span>
+    </div>
   );
 };
 
@@ -60,36 +47,38 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts }) => {
   if (toasts.length === 0) return null;
 
   return (
-    <View style={styles.container} pointerEvents="none">
+    <div style={styles.container}>
       {toasts.map((t) => (
         <SingleToast key={t.id} toast={t} />
       ))}
-    </View>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   container: {
-    position: 'absolute',
+    position: 'fixed',
     bottom: t.spacing.xl + 60,
     left: 0,
     right: 0,
+    display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
     zIndex: 1000,
     gap: t.spacing.sm,
+    pointerEvents: 'none',
   },
   toast: {
-    paddingVertical: t.spacing.md,
-    paddingHorizontal: t.spacing.lg,
+    paddingTop: t.spacing.md,
+    paddingBottom: t.spacing.md,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
     borderRadius: t.radius.full,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 5,
+    boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
   },
   toastText: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.sm + 1,
   },
 }));

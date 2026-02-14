@@ -2,7 +2,6 @@
  * Card — kawaii base card with soft shadows and pastel borders.
  */
 import React, { type ReactNode } from 'react';
-import { View, Platform, type StyleProp, type ViewStyle } from 'react-native';
 import { makeStyles } from '../../utils/styles';
 
 type CardVariant = 'surface' | 'elevated' | 'overlay';
@@ -10,7 +9,7 @@ type CardVariant = 'surface' | 'elevated' | 'overlay';
 interface CardProps {
   variant?: CardVariant;
   children: ReactNode;
-  style?: StyleProp<ViewStyle>;
+  style?: React.CSSProperties;
 }
 
 export const Card: React.FC<CardProps> = ({
@@ -20,27 +19,20 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const styles = useStyles();
   return (
-    <View style={[styles.base, styles[variant], style]}>
+    <div style={{ ...styles.base, ...styles[variant], ...style }}>
       {children}
-    </View>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
   base: {
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     borderRadius: t.radius.lg,
     overflow: 'hidden',
-    ...(Platform.OS === 'ios' && {
-      shadowColor: t.colors.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.15,
-      shadowRadius: 12,
-    }),
-    ...(Platform.OS === 'android' && {
-      elevation: 3,
-    }),
+    boxShadow: `0 4px 12px ${t.colors.shadow}`,
   },
   surface: {
     backgroundColor: t.colors.bgSurface,

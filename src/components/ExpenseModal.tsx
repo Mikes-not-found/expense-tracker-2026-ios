@@ -1,25 +1,11 @@
 /**
  * ExpenseModal — kawaii expense form with pastel pink styling.
- * Keyboard dismiss: tapping outside inputs closes keyboard.
- * iOS number-pad gets a Done button via InputAccessoryView.
+ * Web version using div overlay instead of RN Modal.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  ScrollView,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  Keyboard,
-  Platform,
-  InputAccessoryView,
-} from 'react-native';
 import { Button } from './ui/Button';
 import { PickerSheet } from './PickerSheet';
 import { makeStyles } from '../utils/styles';
-import { useTheme } from '../store/ThemeContext';
 import { categorySubcategories, categoryNames } from '../constants/categories';
 import type { Expense } from '../types';
 
@@ -31,8 +17,6 @@ interface ExpenseModalProps {
 }
 
 const emptyForm = { name: '', date: '', amount: '', primary: '', secondary: '' };
-const DAY_ACCESSORY_ID = 'expense-day-done';
-const AMOUNT_ACCESSORY_ID = 'expense-amount-done';
 
 export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   visible,
@@ -41,7 +25,6 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
   onClose,
 }) => {
   const styles = useStyles();
-  const { theme } = useTheme();
   const [form, setForm] = useState(emptyForm);
   const [primarySheetVisible, setPrimarySheetVisible] = useState(false);
   const [secondarySheetVisible, setSecondarySheetVisible] = useState(false);
@@ -78,7 +61,6 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
 
   const handleSave = useCallback(() => {
     if (!isValid) return;
-    Keyboard.dismiss();
     onSave({
       name: form.name.trim(),
       date: parseInt(form.date, 10),
@@ -87,11 +69,6 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
       secondary: form.secondary,
     });
   }, [form, isValid, onSave]);
-
-  const handleClose = useCallback(() => {
-    Keyboard.dismiss();
-    onClose();
-  }, [onClose]);
 
   const selectPrimary = useCallback((cat: string) => {
     setForm((f) => ({ ...f, primary: cat, secondary: '' }));
@@ -103,175 +80,156 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
     setSecondarySheetVisible(false);
   }, []);
 
+  if (!visible) return null;
+
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.root}>
-          <View style={styles.header}>
-            <Text style={styles.title}>
-              {expense ? '\u{270E}\uFE0F Edit Expense' : '\u{2795} New Expense'}
-            </Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>{'\u2715'}</Text>
-            </TouchableOpacity>
-          </View>
+    <div style={styles.overlay}>
+      <div style={styles.root}>
+        <div style={styles.header}>
+          <span style={styles.title}>
+            {expense ? '\u{270E}\uFE0F Edit Expense' : '\u{2795} New Expense'}
+          </span>
+          <button onClick={onClose} style={styles.closeBtn}>
+            <span style={styles.closeText}>{'\u2715'}</span>
+          </button>
+        </div>
 
-          <ScrollView
-            style={styles.body}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            showsVerticalScrollIndicator={false}
+        <div style={styles.body}>
+          <label style={styles.label}>{'\u{1F4DD}'} EXPENSE NAME</label>
+          <input
+            style={styles.input}
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="e.g. Grocery shopping"
+          />
+
+          <div style={styles.row}>
+            <div style={styles.halfField}>
+              <label style={styles.label}>{'\u{1F4C5}'} DAY</label>
+              <input
+                style={styles.input}
+                value={form.date}
+                onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
+                placeholder="1-31"
+                type="number"
+                inputMode="numeric"
+                maxLength={2}
+              />
+            </div>
+            <div style={styles.halfField}>
+              <label style={styles.label}>{'\u{1F4B0}'} AMOUNT ({'\u20AC'})</label>
+              <input
+                style={styles.input}
+                value={form.amount}
+                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                placeholder="0.00"
+                type="number"
+                inputMode="decimal"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <label style={styles.label}>{'\u{1F3F7}\uFE0F'} CATEGORY</label>
+          <div
+            style={styles.picker}
+            onClick={() => setPrimarySheetVisible(true)}
           >
-            <Text style={styles.label}>{'\u{1F4DD}'} EXPENSE NAME</Text>
-            <TextInput
-              style={styles.input}
-              value={form.name}
-              onChangeText={(v) => setForm((f) => ({ ...f, name: v }))}
-              placeholder="e.g. Grocery shopping"
-              placeholderTextColor="#a8bfa0"
-              autoFocus={false}
-              returnKeyType="done"
-              onSubmitEditing={Keyboard.dismiss}
-            />
+            <span style={form.primary ? styles.pickerText : styles.pickerPlaceholder}>
+              {form.primary || 'Select...'}
+            </span>
+            <span style={styles.pickerArrow}>{'\u25BC'}</span>
+          </div>
 
-            <View style={styles.row}>
-              <View style={styles.halfField}>
-                <Text style={styles.label}>{'\u{1F4C5}'} DAY</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.date}
-                  onChangeText={(v) => setForm((f) => ({ ...f, date: v }))}
-                  placeholder="1-31"
-                  placeholderTextColor="#a8bfa0"
-                  keyboardType="number-pad"
-                  maxLength={2}
-                  inputAccessoryViewID={Platform.OS === 'ios' ? DAY_ACCESSORY_ID : undefined}
-                />
-              </View>
-              <View style={styles.halfField}>
-                <Text style={styles.label}>{'\u{1F4B0}'} AMOUNT ({'\u20AC'})</Text>
-                <TextInput
-                  style={styles.input}
-                  value={form.amount}
-                  onChangeText={(v) => setForm((f) => ({ ...f, amount: v }))}
-                  placeholder="0.00"
-                  placeholderTextColor="#a8bfa0"
-                  keyboardType="decimal-pad"
-                  inputAccessoryViewID={Platform.OS === 'ios' ? AMOUNT_ACCESSORY_ID : undefined}
-                />
-              </View>
-            </View>
+          <label style={styles.label}>{'\u{1F4CC}'} SUBCATEGORY</label>
+          <div
+            style={{
+              ...styles.picker,
+              ...(!form.primary ? styles.pickerDisabled : {}),
+            }}
+            onClick={() => form.primary && setSecondarySheetVisible(true)}
+          >
+            <span style={form.secondary ? styles.pickerText : styles.pickerPlaceholder}>
+              {form.secondary || (form.primary ? 'Select...' : 'Select category first...')}
+            </span>
+            <span style={styles.pickerArrow}>{'\u25BC'}</span>
+          </div>
 
-            <Text style={styles.label}>{'\u{1F3F7}\uFE0F'} CATEGORY</Text>
-            <TouchableOpacity
-              style={styles.picker}
-              onPress={() => {
-                Keyboard.dismiss();
-                setPrimarySheetVisible(true);
-              }}
-            >
-              <Text style={form.primary ? styles.pickerText : styles.pickerPlaceholder}>
-                {form.primary || 'Select...'}
-              </Text>
-              <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
-            </TouchableOpacity>
+          <div style={{ height: 40 }} />
+        </div>
 
-            <Text style={styles.label}>{'\u{1F4CC}'} SUBCATEGORY</Text>
-            <TouchableOpacity
-              style={[styles.picker, !form.primary && styles.pickerDisabled]}
-              onPress={() => {
-                if (form.primary) {
-                  Keyboard.dismiss();
-                  setSecondarySheetVisible(true);
-                }
-              }}
-              disabled={!form.primary}
-            >
-              <Text style={form.secondary ? styles.pickerText : styles.pickerPlaceholder}>
-                {form.secondary || (form.primary ? 'Select...' : 'Select category first...')}
-              </Text>
-              <Text style={styles.pickerArrow}>{'\u25BC'}</Text>
-            </TouchableOpacity>
+        <div style={styles.actions}>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button
+            variant="primary"
+            onClick={handleSave}
+            disabled={!isValid}
+          >
+            {'\u{1F4BE}'} Save Expense
+          </Button>
+        </div>
+      </div>
 
-            <View style={{ height: 40 }} />
-          </ScrollView>
-
-          <View style={styles.actions}>
-            <Button variant="ghost" onPress={handleClose}>Cancel</Button>
-            <Button
-              variant="primary"
-              onPress={handleSave}
-              disabled={!isValid}
-            >
-              {'\u{1F4BE}'} Save Expense
-            </Button>
-          </View>
-
-          <PickerSheet
-            title="Select Category"
-            options={categoryNames}
-            selected={form.primary}
-            onSelect={selectPrimary}
-            onDismiss={() => setPrimarySheetVisible(false)}
-            visible={primarySheetVisible}
-          />
-          <PickerSheet
-            title="Select Subcategory"
-            options={subcategories}
-            selected={form.secondary}
-            onSelect={selectSecondary}
-            onDismiss={() => setSecondarySheetVisible(false)}
-            visible={secondarySheetVisible}
-          />
-        </View>
-      </TouchableWithoutFeedback>
-
-      {/* iOS Done buttons — separate nativeID per keyboard type to avoid iOS conflicts */}
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={DAY_ACCESSORY_ID}>
-          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
-            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
-              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </InputAccessoryView>
-      )}
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={AMOUNT_ACCESSORY_ID}>
-          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
-            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
-              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </InputAccessoryView>
-      )}
-    </Modal>
+      <PickerSheet
+        title="Select Category"
+        options={categoryNames}
+        selected={form.primary}
+        onSelect={selectPrimary}
+        onDismiss={() => setPrimarySheetVisible(false)}
+        visible={primarySheetVisible}
+      />
+      <PickerSheet
+        title="Select Subcategory"
+        options={subcategories}
+        selected={form.secondary}
+        onSelect={selectSecondary}
+        onDismiss={() => setSecondarySheetVisible(false)}
+        visible={secondarySheetVisible}
+      />
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 800,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
   root: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 500,
+    height: '95%',
     backgroundColor: t.colors.bgBase,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
+    display: 'flex',
+    flexDirection: 'column',
+    animation: 'slideUp 0.3s ease-out',
   },
   header: {
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: t.spacing.lg,
-    paddingTop: t.spacing.xl + 20,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
+    paddingTop: t.spacing.lg,
     paddingBottom: t.spacing.md,
     borderBottomWidth: 1.5,
+    borderBottomStyle: 'solid',
     borderBottomColor: t.colors.border,
     backgroundColor: t.colors.bgSurface,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
   },
   title: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.xl + 2,
     color: t.colors.textPrimary,
   },
@@ -280,10 +238,15 @@ const useStyles = makeStyles((t) => ({
     height: 40,
     borderRadius: 20,
     backgroundColor: t.colors.bgInteractive,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
+    cursor: 'pointer',
+    outline: 'none',
+    padding: 0,
   },
   closeText: {
     fontSize: 18,
@@ -291,11 +254,15 @@ const useStyles = makeStyles((t) => ({
   },
   body: {
     flex: 1,
-    paddingHorizontal: t.spacing.lg,
+    overflowY: 'auto' as const,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
     paddingTop: t.spacing.lg,
   },
   label: {
+    display: 'block',
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.xs + 1,
     color: t.colors.textMuted,
     letterSpacing: 0.5,
@@ -303,17 +270,25 @@ const useStyles = makeStyles((t) => ({
     marginTop: t.spacing.md,
   },
   input: {
+    width: '100%',
     backgroundColor: t.colors.bgSurface,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     borderRadius: t.radius.md,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingLeft: 16,
+    paddingRight: 16,
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
+    outline: 'none',
+    boxSizing: 'border-box' as const,
   },
   row: {
+    display: 'flex',
     flexDirection: 'row',
     gap: t.spacing.md,
   },
@@ -321,26 +296,34 @@ const useStyles = makeStyles((t) => ({
     flex: 1,
   },
   picker: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: t.colors.bgSurface,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     borderRadius: t.radius.md,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    paddingLeft: 16,
+    paddingRight: 16,
+    cursor: 'pointer',
   },
   pickerDisabled: {
     opacity: 0.5,
+    cursor: 'default' as const,
   },
   pickerText: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
   },
   pickerPlaceholder: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textMuted,
   },
@@ -349,30 +332,17 @@ const useStyles = makeStyles((t) => ({
     color: t.colors.accent,
   },
   actions: {
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: t.spacing.sm,
-    paddingHorizontal: t.spacing.lg,
-    paddingVertical: t.spacing.md,
-    borderTopWidth: 1.5,
-    borderTopColor: t.colors.border,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
+    paddingTop: t.spacing.md,
     paddingBottom: t.spacing.xl,
+    borderTopWidth: 1.5,
+    borderTopStyle: 'solid',
+    borderTopColor: t.colors.border,
     backgroundColor: t.colors.bgSurface,
-  },
-  accessoryBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-  },
-  doneButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  doneText: {
-    fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.md,
   },
 }));

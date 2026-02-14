@@ -1,22 +1,9 @@
 /**
  * SummaryModal — kawaii Kakeibo-style monthly summary editor.
- * Footer stays fixed — keyboard dismissed via Done button or tapping outside.
  */
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TextInput,
-  Platform,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  Keyboard,
-  InputAccessoryView,
-} from 'react-native';
 import { Button } from './ui/Button';
 import { makeStyles } from '../utils/styles';
-import { useTheme } from '../store/ThemeContext';
 
 interface SummaryModalProps {
   visible: boolean;
@@ -26,8 +13,6 @@ interface SummaryModalProps {
   onClose: () => void;
 }
 
-const SUMMARY_ACCESSORY_ID = 'summary-modal-done';
-
 export const SummaryModal: React.FC<SummaryModalProps> = ({
   visible,
   title,
@@ -36,7 +21,6 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   onClose,
 }) => {
   const styles = useStyles();
-  const { theme } = useTheme();
   const [text, setText] = useState('');
 
   useEffect(() => {
@@ -44,89 +28,85 @@ export const SummaryModal: React.FC<SummaryModalProps> = ({
   }, [visible, initialText]);
 
   const handleSave = useCallback(() => {
-    Keyboard.dismiss();
     onSave(text);
   }, [text, onSave]);
 
-  const handleClose = useCallback(() => {
-    Keyboard.dismiss();
-    onClose();
-  }, [onClose]);
+  if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={handleClose}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-        <View style={styles.root}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{'\u{1F33F}'} {title}</Text>
-            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>{'\u2715'}</Text>
-            </TouchableOpacity>
-          </View>
+    <div style={styles.overlay}>
+      <div style={styles.root}>
+        <div style={styles.header}>
+          <span style={styles.title}>{'\u{1F33F}'} {title}</span>
+          <button onClick={onClose} style={styles.closeBtn}>
+            <span style={styles.closeText}>{'\u2715'}</span>
+          </button>
+        </div>
 
-          <View style={styles.body}>
-            <Text style={styles.hint}>
-              {'\u{1F375}'} Write your Kakeibo reflection — what did you spend on? What are you grateful for? What are your savings goals?
-            </Text>
-            <TextInput
-              style={styles.textarea}
-              value={text}
-              onChangeText={setText}
-              multiline
-              textAlignVertical="top"
-              placeholder="This month I spent on... I'm grateful for... Next month I want to..."
-              placeholderTextColor="#a8bfa0"
-              inputAccessoryViewID={Platform.OS === 'ios' ? SUMMARY_ACCESSORY_ID : undefined}
-            />
-          </View>
+        <div style={styles.body}>
+          <div style={styles.hint}>
+            {'\u{1F375}'} Write your Kakeibo reflection — what did you spend on? What are you grateful for? What are your savings goals?
+          </div>
+          <textarea
+            style={styles.textarea}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="This month I spent on... I'm grateful for... Next month I want to..."
+          />
+        </div>
 
-          <View style={styles.footer}>
-            <Text style={styles.charCount}>{'\u{1F4DD}'} {text.length} characters</Text>
-            <View style={styles.actions}>
-              <Button variant="ghost" onPress={handleClose}>Cancel</Button>
-              <Button variant="primary" onPress={handleSave}>{'\u{1F4BE}'} Save</Button>
-            </View>
-          </View>
-        </View>
-      </TouchableWithoutFeedback>
-
-      {/* iOS Done button above keyboard — MUST be outside TouchableWithoutFeedback */}
-      {Platform.OS === 'ios' && (
-        <InputAccessoryView nativeID={SUMMARY_ACCESSORY_ID}>
-          <View style={[styles.accessoryBar, { backgroundColor: theme.colors.bgSurface, borderTopColor: theme.colors.border }]}>
-            <TouchableOpacity onPress={Keyboard.dismiss} style={styles.doneButton}>
-              <Text style={[styles.doneText, { color: theme.colors.accent }]}>Done</Text>
-            </TouchableOpacity>
-          </View>
-        </InputAccessoryView>
-      )}
-    </Modal>
+        <div style={styles.footer}>
+          <span style={styles.charCount}>{'\u{1F4DD}'} {text.length} characters</span>
+          <div style={styles.actions}>
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button variant="primary" onClick={handleSave}>{'\u{1F4BE}'} Save</Button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 
 const useStyles = makeStyles((t) => ({
+  overlay: {
+    position: 'fixed',
+    inset: 0,
+    zIndex: 800,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
   root: {
-    flex: 1,
+    width: '100%',
+    maxWidth: 500,
+    height: '90%',
     backgroundColor: t.colors.bgBase,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
+    display: 'flex',
+    flexDirection: 'column',
+    animation: 'slideUp 0.3s ease-out',
   },
   header: {
+    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: t.spacing.lg,
-    paddingTop: t.spacing.xl + 20,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
+    paddingTop: t.spacing.lg,
     paddingBottom: t.spacing.md,
     borderBottomWidth: 1.5,
+    borderBottomStyle: 'solid',
     borderBottomColor: t.colors.border,
     backgroundColor: t.colors.bgSurface,
+    borderTopLeftRadius: t.radius.xl,
+    borderTopRightRadius: t.radius.xl,
   },
   title: {
     fontFamily: t.fonts.monoBold,
+    fontWeight: t.fontWeights.monoBold,
     fontSize: t.fontSize.xl + 2,
     color: t.colors.green,
   },
@@ -135,10 +115,15 @@ const useStyles = makeStyles((t) => ({
     height: 40,
     borderRadius: 20,
     backgroundColor: t.colors.bgInteractive,
+    display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
+    cursor: 'pointer',
+    outline: 'none',
+    padding: 0,
   },
   closeText: {
     fontSize: 18,
@@ -146,63 +131,61 @@ const useStyles = makeStyles((t) => ({
   },
   body: {
     flex: 1,
-    paddingHorizontal: t.spacing.lg,
+    display: 'flex',
+    flexDirection: 'column',
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
     paddingTop: t.spacing.lg,
   },
   hint: {
     fontFamily: t.fonts.monoMedium,
+    fontWeight: t.fontWeights.monoMedium,
     fontSize: t.fontSize.md,
     color: t.colors.textSecondary,
-    lineHeight: 22,
+    lineHeight: '22px',
     marginBottom: t.spacing.md,
   },
   textarea: {
     flex: 1,
     backgroundColor: t.colors.bgSurface,
     borderWidth: 1.5,
+    borderStyle: 'solid',
     borderColor: t.colors.border,
     borderRadius: t.radius.md,
     padding: t.spacing.md,
     fontFamily: t.fonts.sans,
+    fontWeight: t.fontWeights.sans,
     fontSize: t.fontSize.md + 1,
     color: t.colors.textPrimary,
-    lineHeight: 24,
+    lineHeight: '24px',
     minHeight: 200,
+    resize: 'none' as const,
+    outline: 'none',
+    boxSizing: 'border-box' as const,
   },
   footer: {
+    display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: t.spacing.lg,
-    paddingVertical: t.spacing.md,
-    borderTopWidth: 1.5,
-    borderTopColor: t.colors.border,
+    paddingLeft: t.spacing.lg,
+    paddingRight: t.spacing.lg,
+    paddingTop: t.spacing.md,
     paddingBottom: t.spacing.xl,
+    borderTopWidth: 1.5,
+    borderTopStyle: 'solid',
+    borderTopColor: t.colors.border,
     backgroundColor: t.colors.bgSurface,
   },
   charCount: {
     fontFamily: t.fonts.mono,
+    fontWeight: t.fontWeights.mono,
     fontSize: t.fontSize.xs + 1,
     color: t.colors.textMuted,
   },
   actions: {
+    display: 'flex',
     flexDirection: 'row',
     gap: t.spacing.sm,
-  },
-  accessoryBar: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-  },
-  doneButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  doneText: {
-    fontFamily: t.fonts.monoBold,
-    fontSize: t.fontSize.md,
   },
 }));
