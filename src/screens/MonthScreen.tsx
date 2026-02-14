@@ -160,7 +160,6 @@ const useStyles = makeStyles((t) => ({
   pageContainer: {
     flex: 1,
     overflowY: 'auto' as const,
-    zIndex: 1,
   },
   fab: {
     position: 'absolute',

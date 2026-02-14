@@ -305,7 +305,6 @@ const useStyles = makeStyles((t) => ({
   scroll: {
     flex: 1,
     overflowY: 'auto' as const,
-    zIndex: 1,
   },
   content: {
     padding: t.spacing.md,
