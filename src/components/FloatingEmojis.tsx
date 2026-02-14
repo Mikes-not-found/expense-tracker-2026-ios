@@ -57,6 +57,6 @@ const containerStyle: React.CSSProperties = {
   position: 'absolute',
   inset: 0,
   overflow: 'hidden',
-  zIndex: 1,
+  zIndex: 0,
   pointerEvents: 'none',
 };
