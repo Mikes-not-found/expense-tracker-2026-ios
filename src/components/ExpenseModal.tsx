@@ -111,7 +111,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
                 value={form.date}
                 onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                 placeholder="1-31"
-                type="number"
+                type="text"
                 inputMode="numeric"
                 maxLength={2}
               />
@@ -121,11 +121,10 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
               <input
                 style={styles.input}
                 value={form.amount}
-                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value.replace(',', '.') }))}
                 placeholder="0.00"
-                type="number"
+                type="text"
                 inputMode="decimal"
-                step="0.01"
               />
             </div>
           </div>
